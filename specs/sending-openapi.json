@@ -1,0 +1,752 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Lettermint Sending API",
+    "version": "0.0.1",
+    "description": "API for sending transactional emails. Authenticate using your Project API token via the `x-lettermint-token` header."
+  },
+  "servers": [
+    {
+      "url": "https://api.lettermint.co/v1"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Send",
+      "description": "Send a single transactional email or a batch of them in one request, with attachments, custom headers and tags."
+    },
+    {
+      "name": "Generic",
+      "description": "Check that the API is reachable and that your Project API token is accepted."
+    }
+  ],
+  "security": [
+    {
+      "SendingApiToken": []
+    }
+  ],
+  "paths": {
+    "/send": {
+      "post": {
+        "operationId": "v1.sendMail",
+        "summary": "Send an email",
+        "tags": [
+          "Send"
+        ],
+        "parameters": [
+          {
+            "name": "x-lettermint-token",
+            "in": "header",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Project API token for the project sending this email.",
+            "example": "lm_..."
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SendMailRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "message_id": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "status": {
+                          "$ref": "#/components/schemas/MessageStatus"
+                        },
+                        "scheduled_at": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "message_id",
+                        "status",
+                        "scheduled_at"
+                      ]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "message_id": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "status": {
+                          "$ref": "#/components/schemas/MessageStatus"
+                        }
+                      },
+                      "required": [
+                        "message_id",
+                        "status"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "422": {
+            "$ref": "#/components/responses/ValidationException"
+          }
+        },
+        "security": [],
+        "x-code-samples": [
+          {
+            "lang": "shell",
+            "label": "cURL",
+            "source": "curl -X POST https://api.lettermint.co/v1/send \\\n  -H \"x-lettermint-token: $LETTERMINT_PROJECT_TOKEN\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\"from\":\"John Doe <john@example.com>\",\"to\":[\"recipient@example.com\"],\"subject\":\"Hello\",\"text\":\"Sent with Lettermint.\"}'"
+          },
+          {
+            "lang": "javascript",
+            "label": "Node.js",
+            "source": "const response = await fetch(\"https://api.lettermint.co/v1/send\", {\n  method: \"POST\",\n  headers: {\n    \"x-lettermint-token\": process.env.LETTERMINT_PROJECT_TOKEN,\n    \"Content-Type\": \"application/json\",\n  },\n  body: JSON.stringify({\n    from: \"John Doe <john@example.com>\",\n    to: [\"recipient@example.com\"],\n    subject: \"Hello\",\n    text: \"Sent with Lettermint.\",\n  }),\n});"
+          }
+        ]
+      }
+    },
+    "/send/batch": {
+      "post": {
+        "operationId": "v1.sendBatchMail",
+        "description": "Send up to 500 emails in a single request. Each email in the batch supports the same parameters as the single send endpoint.",
+        "summary": "Send multiple emails in a batch",
+        "tags": [
+          "Send"
+        ],
+        "parameters": [
+          {
+            "name": "x-lettermint-token",
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SendBatchMailRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "Array of message IDs and their status",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "message_id": {
+                        "type": "string"
+                      },
+                      "status": {
+                        "$ref": "#/components/schemas/MessageStatus"
+                      },
+                      "scheduled_at": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "message_id",
+                      "status"
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "422": {
+            "$ref": "#/components/responses/ValidationException"
+          }
+        },
+        "security": []
+      }
+    },
+    "/ping": {
+      "get": {
+        "operationId": "v1.ping",
+        "description": "This endpoint can be used to check the API status and verify authentication.\nIt accepts both Team API tokens (via Bearer authentication) and Project API tokens (via X-Lettermint-Token header).",
+        "summary": "Ping the API",
+        "tags": [
+          "Generic"
+        ],
+        "parameters": [
+          {
+            "name": "Authorization",
+            "in": "header",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Team API token using Bearer authentication. Format: `Bearer {team_token}`.",
+            "example": "Bearer lm_team_..."
+          },
+          {
+            "name": "X-Lettermint-Token",
+            "in": "header",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Project API token.",
+            "example": "lm_..."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "integer",
+                  "const": 200
+                }
+              }
+            }
+          }
+        },
+        "security": []
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "SendingApiToken": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "x-lettermint-token",
+        "description": "Project API token for the project sending email. Create one in your project settings."
+      }
+    },
+    "schemas": {
+      "MessageStatus": {
+        "type": "string",
+        "enum": [
+          "scheduled",
+          "pending",
+          "queued",
+          "quarantined",
+          "suppressed",
+          "processed",
+          "delivered",
+          "opened",
+          "clicked",
+          "soft_bounced",
+          "hard_bounced",
+          "spam_complaint",
+          "failed",
+          "blocked",
+          "policy_rejected",
+          "unsubscribed",
+          "canceled"
+        ],
+        "title": "MessageStatus"
+      },
+      "SendMailRequest": {
+        "type": "object",
+        "properties": {
+          "route": {
+            "type": "string"
+          },
+          "from": {
+            "type": "string"
+          },
+          "to": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "minItems": 1
+          },
+          "cc": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "bcc": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "reply_to": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "subject": {
+            "type": "string",
+            "maxLength": 998
+          },
+          "scheduled_at": {
+            "type": "string",
+            "description": "ISO 8601 or English delivery time. A time without a timezone uses UTC.",
+            "examples": [
+              "tomorrow at 9am"
+            ],
+            "maxLength": 255
+          },
+          "headers": {
+            "type": "object",
+            "description": "Custom headers to include in the email. To preserve a submitted RFC Message-ID,\ninclude both Message-ID and X-LM-Preserve-Message-ID with a string value of true or 1.\nHeader names and control values are case-insensitive; false or 0 retains replacement.",
+            "examples": [
+              {
+                "Message-ID": "<ticket-123@example.com>",
+                "X-LM-Preserve-Message-ID": "true"
+              }
+            ],
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "metadata": {
+            "type": "object",
+            "description": "Metadata to track with the email (not added as email headers).",
+            "examples": [
+              {
+                "user_id": "123",
+                "campaign_id": "welcome-2025"
+              }
+            ],
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "tag": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Tag to categorize and filter emails (alphanumeric, underscores, hyphens, spaces allowed).",
+            "examples": [
+              "welcome-email"
+            ]
+          },
+          "tags": {
+            "type": "array",
+            "description": "Reusable exact-match tags. Names must be unique and are case-sensitive.",
+            "examples": [
+              [
+                {
+                  "name": "campaign",
+                  "value": "welcome-v2"
+                },
+                {
+                  "name": "environment",
+                  "value": "production"
+                }
+              ]
+            ],
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "pattern": "^[A-Za-z0-9_-]{1,32}$",
+                  "examples": [
+                    "campaign"
+                  ],
+                  "minLength": 1,
+                  "maxLength": 32
+                },
+                "value": {
+                  "type": "string",
+                  "pattern": "^[A-Za-z0-9_-]{1,64}$",
+                  "examples": [
+                    "welcome-v2"
+                  ],
+                  "minLength": 1,
+                  "maxLength": 64
+                }
+              },
+              "required": [
+                "name",
+                "value"
+              ]
+            },
+            "maxItems": 20
+          },
+          "settings": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "description": "Per-email settings that override the selected route settings for this email only.",
+            "examples": [
+              {
+                "track_opens": false,
+                "track_clicks": true,
+                "tls": "enforced"
+              }
+            ],
+            "properties": {
+              "track_opens": {
+                "type": "boolean"
+              },
+              "track_clicks": {
+                "type": "boolean"
+              },
+              "tls": {
+                "$ref": "#/components/schemas/TlsPolicy"
+              }
+            }
+          },
+          "html": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "minLength": 3
+          },
+          "text": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "minLength": 3
+          },
+          "attachments": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "filename": {
+                  "type": "string"
+                },
+                "content": {
+                  "type": "string"
+                },
+                "content_type": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "description": "The MIME type of the attachment. Supports parameters (e.g. `text/calendar; method=REQUEST`).\nIf omitted, detected automatically from content or filename.",
+                  "example": "application/pdf",
+                  "maxLength": 255
+                },
+                "content_id": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "description": "Content ID for inline attachments, referenced via `cid:` in HTML body.\nIf no `@` is present, `@lm` is appended automatically.",
+                  "example": "logo-image",
+                  "pattern": "^[a-zA-Z0-9._@-]+$",
+                  "maxLength": 255
+                }
+              },
+              "required": [
+                "filename",
+                "content"
+              ]
+            }
+          }
+        },
+        "required": [
+          "from",
+          "to",
+          "subject"
+        ],
+        "title": "SendMailRequest"
+      },
+      "SendBatchMailRequest": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "route": {
+              "type": "string"
+            },
+            "from": {
+              "type": "string"
+            },
+            "to": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "minItems": 1
+            },
+            "cc": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "bcc": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "reply_to": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "subject": {
+              "type": "string",
+              "maxLength": 998
+            },
+            "scheduled_at": {
+              "type": "string",
+              "maxLength": 255
+            },
+            "headers": {
+              "type": "object",
+              "description": "Custom headers to include in the email. To preserve a submitted RFC Message-ID,\ninclude both Message-ID and X-LM-Preserve-Message-ID with a string value of true or 1.\nHeader names and control values are case-insensitive; false or 0 retains replacement.",
+              "examples": [
+                {
+                  "Message-ID": "<ticket-123@example.com>",
+                  "X-LM-Preserve-Message-ID": "true"
+                }
+              ],
+              "additionalProperties": {
+                "type": "string"
+              }
+            },
+            "metadata": {
+              "type": "array",
+              "description": "Metadata to track with the email (not added as email headers).",
+              "examples": [
+                {
+                  "user_id": "123",
+                  "campaign_id": "welcome-2025"
+                }
+              ],
+              "items": {
+                "type": "string"
+              }
+            },
+            "tag": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "description": "Tag to categorize and filter emails (alphanumeric, underscores, hyphens, spaces allowed).",
+              "examples": [
+                "welcome-email"
+              ]
+            },
+            "tags": {
+              "type": "array",
+              "description": "Reusable exact-match tags. Names must be unique and are case-sensitive.",
+              "examples": [
+                [
+                  {
+                    "name": "campaign",
+                    "value": "welcome-v2"
+                  },
+                  {
+                    "name": "environment",
+                    "value": "production"
+                  }
+                ]
+              ],
+              "items": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "pattern": "^[A-Za-z0-9_-]{1,32}$",
+                    "examples": [
+                      "campaign"
+                    ],
+                    "minLength": 1,
+                    "maxLength": 32
+                  },
+                  "value": {
+                    "type": "string",
+                    "pattern": "^[A-Za-z0-9_-]{1,64}$",
+                    "examples": [
+                      "welcome-v2"
+                    ],
+                    "minLength": 1,
+                    "maxLength": 64
+                  }
+                },
+                "required": [
+                  "name",
+                  "value"
+                ]
+              },
+              "maxItems": 20
+            },
+            "settings": {
+              "type": [
+                "object",
+                "null"
+              ],
+              "description": "Per-email settings that override the selected route settings for this email only.",
+              "examples": [
+                {
+                  "track_opens": false,
+                  "track_clicks": true,
+                  "tls": "enforced"
+                }
+              ],
+              "properties": {
+                "track_opens": {
+                  "type": "boolean"
+                },
+                "track_clicks": {
+                  "type": "boolean"
+                },
+                "tls": {
+                  "$ref": "#/components/schemas/TlsPolicy"
+                }
+              }
+            },
+            "html": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "minLength": 3
+            },
+            "text": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "minLength": 3
+            },
+            "attachments": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "filename": {
+                    "type": "string"
+                  },
+                  "content": {
+                    "type": "string"
+                  },
+                  "content_type": {
+                    "type": [
+                      "string",
+                      "null"
+                    ],
+                    "description": "The MIME type of the attachment. Supports parameters (e.g. `text/calendar; method=REQUEST`).\nIf omitted, detected automatically from content or filename.",
+                    "example": "application/pdf",
+                    "maxLength": 255
+                  },
+                  "content_id": {
+                    "type": [
+                      "string",
+                      "null"
+                    ],
+                    "description": "Content ID for inline attachments, referenced via `cid:` in HTML body.\nIf no `@` is present, `@lm` is appended automatically.",
+                    "example": "logo-image",
+                    "pattern": "^[a-zA-Z0-9._@-]+$",
+                    "maxLength": 255
+                  }
+                },
+                "required": [
+                  "filename",
+                  "content"
+                ]
+              }
+            }
+          },
+          "required": [
+            "from",
+            "to",
+            "subject"
+          ]
+        },
+        "minItems": 1,
+        "title": "SendBatchMailRequest"
+      },
+      "TlsPolicy": {
+        "type": "string",
+        "enum": [
+          "opportunistic",
+          "enforced"
+        ],
+        "title": "TlsPolicy"
+      }
+    },
+    "responses": {
+      "ValidationException": {
+        "description": "Validation error",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string",
+                  "description": "Errors overview."
+                },
+                "errors": {
+                  "type": "object",
+                  "description": "A detailed description of each field that failed validation.",
+                  "additionalProperties": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                }
+              },
+              "required": [
+                "message",
+                "errors"
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "x-tagGroups": [
+    {
+      "name": "Sending",
+      "tags": [
+        "Send"
+      ]
+    }
+  ]
+}

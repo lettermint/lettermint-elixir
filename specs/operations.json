@@ -1,0 +1,706 @@
+[
+  {
+    "surface": "sending",
+    "operationId": "v1.sendMail",
+    "module": "Lettermint.Email",
+    "method": "send",
+    "verb": "POST",
+    "path": "/send",
+    "params": [],
+    "payload": true,
+    "request": "{:model, Lettermint.Models.SendMailRequest}",
+    "response": "{:model, Lettermint.Models.SendEmailResponse}"
+  },
+  {
+    "surface": "sending",
+    "operationId": "v1.sendBatchMail",
+    "module": "Lettermint.Email",
+    "method": "send_batch",
+    "verb": "POST",
+    "path": "/send/batch",
+    "params": [],
+    "payload": true,
+    "request": "{:list, {:model, Lettermint.Models.SendBatchMailRequestItem}}",
+    "response": "{:list, {:model, Lettermint.Models.SendBatchEmailResponseItem}}"
+  },
+  {
+    "surface": "sending",
+    "operationId": "v1.ping",
+    "module": "Lettermint.Email",
+    "method": "ping",
+    "verb": "GET",
+    "path": "/ping",
+    "params": [],
+    "payload": false,
+    "request": null,
+    "response": ":ping"
+  },
+  {
+    "surface": "team",
+    "operationId": "domain.index",
+    "module": "Lettermint.Domains",
+    "method": "list",
+    "verb": "GET",
+    "path": "/domains",
+    "params": [],
+    "payload": false,
+    "request": null,
+    "response": "{:model, Lettermint.Models.DomainIndexResponse}"
+  },
+  {
+    "surface": "team",
+    "operationId": "domain.store",
+    "module": "Lettermint.Domains",
+    "method": "create",
+    "verb": "POST",
+    "path": "/domains",
+    "params": [],
+    "payload": true,
+    "request": "{:model, Lettermint.Models.StoreDomainData}",
+    "response": "{:model, Lettermint.Models.DomainData}"
+  },
+  {
+    "surface": "team",
+    "operationId": "domain.show",
+    "module": "Lettermint.Domains",
+    "method": "retrieve",
+    "verb": "GET",
+    "path": "/domains/{domainId}",
+    "params": [
+      "domainId"
+    ],
+    "payload": false,
+    "request": null,
+    "response": "{:model, Lettermint.Models.DomainData}"
+  },
+  {
+    "surface": "team",
+    "operationId": "domain.destroy",
+    "module": "Lettermint.Domains",
+    "method": "delete",
+    "verb": "DELETE",
+    "path": "/domains/{domainId}",
+    "params": [
+      "domainId"
+    ],
+    "payload": false,
+    "request": null,
+    "response": "{:model, Lettermint.Models.DomainDestroyResponse}"
+  },
+  {
+    "surface": "team",
+    "operationId": "domain.verifyDnsRecords",
+    "module": "Lettermint.Domains",
+    "method": "verify_dns_records",
+    "verb": "POST",
+    "path": "/domains/{domainId}/dns-records/verify",
+    "params": [
+      "domainId"
+    ],
+    "payload": false,
+    "request": null,
+    "response": "{:model, Lettermint.Models.DomainVerifyDnsRecordsResponse}"
+  },
+  {
+    "surface": "team",
+    "operationId": "domain.verifySpecificDnsRecord",
+    "module": "Lettermint.Domains",
+    "method": "verify_dns_record",
+    "verb": "POST",
+    "path": "/domains/{domainId}/dns-records/{recordId}/verify",
+    "params": [
+      "domainId",
+      "recordId"
+    ],
+    "payload": false,
+    "request": null,
+    "response": "{:model, Lettermint.Models.DomainVerifySpecificDnsRecordResponse}"
+  },
+  {
+    "surface": "team",
+    "operationId": "domain.updateProjects",
+    "module": "Lettermint.Domains",
+    "method": "update_projects",
+    "verb": "PUT",
+    "path": "/domains/{domainId}/projects",
+    "params": [
+      "domainId"
+    ],
+    "payload": true,
+    "request": "{:model, Lettermint.Models.UpdateDomainProjectsData}",
+    "response": "{:model, Lettermint.Models.DomainUpdateProjectsResponse}"
+  },
+  {
+    "surface": "team",
+    "operationId": "v1.ping",
+    "module": "Lettermint.API",
+    "method": "ping",
+    "verb": "GET",
+    "path": "/ping",
+    "params": [],
+    "payload": false,
+    "request": null,
+    "response": ":ping"
+  },
+  {
+    "surface": "team",
+    "operationId": "v1.blockedFileTypes",
+    "module": "Lettermint.API",
+    "method": "blocked_file_types",
+    "verb": "GET",
+    "path": "/blocked-file-types",
+    "params": [],
+    "payload": false,
+    "request": null,
+    "response": "{:model, Lettermint.Models.V1BlockedFileTypesResponse}"
+  },
+  {
+    "surface": "team",
+    "operationId": "rescheduleMessage",
+    "module": "Lettermint.Messages",
+    "method": "reschedule",
+    "verb": "PATCH",
+    "path": "/messages/{messageId}",
+    "params": [
+      "messageId"
+    ],
+    "payload": true,
+    "request": "{:model, Lettermint.Models.RescheduleMessageRequest}",
+    "response": "{:model, Lettermint.Models.RescheduleMessageResponse}"
+  },
+  {
+    "surface": "team",
+    "operationId": "message.show",
+    "module": "Lettermint.Messages",
+    "method": "retrieve",
+    "verb": "GET",
+    "path": "/messages/{messageId}",
+    "params": [
+      "messageId"
+    ],
+    "payload": false,
+    "request": null,
+    "response": "{:model, Lettermint.Models.MessageData}"
+  },
+  {
+    "surface": "team",
+    "operationId": "cancelScheduledMessage",
+    "module": "Lettermint.Messages",
+    "method": "cancel",
+    "verb": "POST",
+    "path": "/messages/{messageId}/cancel",
+    "params": [
+      "messageId"
+    ],
+    "payload": false,
+    "request": null,
+    "response": "{:model, Lettermint.Models.CancelScheduledMessageResponse}"
+  },
+  {
+    "surface": "team",
+    "operationId": "message.index",
+    "module": "Lettermint.Messages",
+    "method": "list",
+    "verb": "GET",
+    "path": "/messages",
+    "params": [],
+    "payload": false,
+    "request": null,
+    "response": "{:model, Lettermint.Models.MessageIndexResponse}"
+  },
+  {
+    "surface": "team",
+    "operationId": "message.events",
+    "module": "Lettermint.Messages",
+    "method": "events",
+    "verb": "GET",
+    "path": "/messages/{messageId}/events",
+    "params": [
+      "messageId"
+    ],
+    "payload": false,
+    "request": null,
+    "response": "{:model, Lettermint.Models.MessageEventsResponse}"
+  },
+  {
+    "surface": "team",
+    "operationId": "message.source",
+    "module": "Lettermint.Messages",
+    "method": "source",
+    "verb": "GET",
+    "path": "/messages/{messageId}/source",
+    "params": [
+      "messageId"
+    ],
+    "payload": false,
+    "request": null,
+    "response": ":raw"
+  },
+  {
+    "surface": "team",
+    "operationId": "message.html",
+    "module": "Lettermint.Messages",
+    "method": "html",
+    "verb": "GET",
+    "path": "/messages/{messageId}/html",
+    "params": [
+      "messageId"
+    ],
+    "payload": false,
+    "request": null,
+    "response": ":raw"
+  },
+  {
+    "surface": "team",
+    "operationId": "message.text",
+    "module": "Lettermint.Messages",
+    "method": "text",
+    "verb": "GET",
+    "path": "/messages/{messageId}/text",
+    "params": [
+      "messageId"
+    ],
+    "payload": false,
+    "request": null,
+    "response": ":raw"
+  },
+  {
+    "surface": "team",
+    "operationId": "processInboundMessage",
+    "module": "Lettermint.Messages",
+    "method": "process",
+    "verb": "POST",
+    "path": "/messages/{messageId}/process",
+    "params": [
+      "messageId"
+    ],
+    "payload": false,
+    "request": null,
+    "response": "{:model, Lettermint.Models.ProcessInboundMessageResponse}"
+  },
+  {
+    "surface": "team",
+    "operationId": "project.index",
+    "module": "Lettermint.Projects",
+    "method": "list",
+    "verb": "GET",
+    "path": "/projects",
+    "params": [],
+    "payload": false,
+    "request": null,
+    "response": "{:model, Lettermint.Models.ProjectIndexResponse}"
+  },
+  {
+    "surface": "team",
+    "operationId": "project.store",
+    "module": "Lettermint.Projects",
+    "method": "create",
+    "verb": "POST",
+    "path": "/projects",
+    "params": [],
+    "payload": true,
+    "request": "{:model, Lettermint.Models.StoreProjectData}",
+    "response": "{:model, Lettermint.Models.ProjectStoreResponse}"
+  },
+  {
+    "surface": "team",
+    "operationId": "project.show",
+    "module": "Lettermint.Projects",
+    "method": "retrieve",
+    "verb": "GET",
+    "path": "/projects/{projectId}",
+    "params": [
+      "projectId"
+    ],
+    "payload": false,
+    "request": null,
+    "response": "{:model, Lettermint.Models.ProjectData}"
+  },
+  {
+    "surface": "team",
+    "operationId": "project.update",
+    "module": "Lettermint.Projects",
+    "method": "update",
+    "verb": "PUT",
+    "path": "/projects/{projectId}",
+    "params": [
+      "projectId"
+    ],
+    "payload": true,
+    "request": "{:model, Lettermint.Models.UpdateProjectData}",
+    "response": "{:model, Lettermint.Models.ProjectUpdateResponse}"
+  },
+  {
+    "surface": "team",
+    "operationId": "project.destroy",
+    "module": "Lettermint.Projects",
+    "method": "delete",
+    "verb": "DELETE",
+    "path": "/projects/{projectId}",
+    "params": [
+      "projectId"
+    ],
+    "payload": false,
+    "request": null,
+    "response": "{:model, Lettermint.Models.ProjectDestroyResponse}"
+  },
+  {
+    "surface": "team",
+    "operationId": "project.rotateToken",
+    "module": "Lettermint.Projects",
+    "method": "rotate_token",
+    "verb": "POST",
+    "path": "/projects/{projectId}/rotate-token",
+    "params": [
+      "projectId"
+    ],
+    "payload": false,
+    "request": null,
+    "response": "{:model, Lettermint.Models.ProjectRotateTokenResponse}"
+  },
+  {
+    "surface": "team",
+    "operationId": "route.index",
+    "module": "Lettermint.Routes",
+    "method": "list",
+    "verb": "GET",
+    "path": "/projects/{projectId}/routes",
+    "params": [
+      "projectId"
+    ],
+    "payload": false,
+    "request": null,
+    "response": "{:model, Lettermint.Models.RouteIndexResponse}"
+  },
+  {
+    "surface": "team",
+    "operationId": "route.store",
+    "module": "Lettermint.Routes",
+    "method": "create",
+    "verb": "POST",
+    "path": "/projects/{projectId}/routes",
+    "params": [
+      "projectId"
+    ],
+    "payload": true,
+    "request": "{:model, Lettermint.Models.StoreRouteData}",
+    "response": "{:model, Lettermint.Models.RouteStoreResponse}"
+  },
+  {
+    "surface": "team",
+    "operationId": "route.show",
+    "module": "Lettermint.Routes",
+    "method": "retrieve",
+    "verb": "GET",
+    "path": "/routes/{routeId}",
+    "params": [
+      "routeId"
+    ],
+    "payload": false,
+    "request": null,
+    "response": "{:model, Lettermint.Models.RouteData}"
+  },
+  {
+    "surface": "team",
+    "operationId": "route.update",
+    "module": "Lettermint.Routes",
+    "method": "update",
+    "verb": "PUT",
+    "path": "/routes/{routeId}",
+    "params": [
+      "routeId"
+    ],
+    "payload": true,
+    "request": "{:model, Lettermint.Models.UpdateRouteData}",
+    "response": "{:model, Lettermint.Models.RouteUpdateResponse}"
+  },
+  {
+    "surface": "team",
+    "operationId": "route.destroy",
+    "module": "Lettermint.Routes",
+    "method": "delete",
+    "verb": "DELETE",
+    "path": "/routes/{routeId}",
+    "params": [
+      "routeId"
+    ],
+    "payload": false,
+    "request": null,
+    "response": "{:model, Lettermint.Models.RouteDestroyResponse}"
+  },
+  {
+    "surface": "team",
+    "operationId": "route.verifyInboundDomain",
+    "module": "Lettermint.Routes",
+    "method": "verify_inbound_domain",
+    "verb": "POST",
+    "path": "/routes/{routeId}/verify-inbound-domain",
+    "params": [
+      "routeId"
+    ],
+    "payload": false,
+    "request": null,
+    "response": "{:model, Lettermint.Models.RouteVerifyInboundDomainResponse}"
+  },
+  {
+    "surface": "team",
+    "operationId": "stats.index",
+    "module": "Lettermint.Stats",
+    "method": "retrieve",
+    "verb": "GET",
+    "path": "/stats",
+    "params": [],
+    "payload": false,
+    "request": null,
+    "response": "{:model, Lettermint.Models.StatsData}"
+  },
+  {
+    "surface": "team",
+    "operationId": "suppression.index",
+    "module": "Lettermint.Suppressions",
+    "method": "list",
+    "verb": "GET",
+    "path": "/suppressions",
+    "params": [],
+    "payload": false,
+    "request": null,
+    "response": "{:model, Lettermint.Models.SuppressionIndexResponse}"
+  },
+  {
+    "surface": "team",
+    "operationId": "suppression.store",
+    "module": "Lettermint.Suppressions",
+    "method": "create",
+    "verb": "POST",
+    "path": "/suppressions",
+    "params": [],
+    "payload": true,
+    "request": "{:model, Lettermint.Models.StoreSuppressionData}",
+    "response": "{:model, Lettermint.Models.SuppressionStoreResponse}"
+  },
+  {
+    "surface": "team",
+    "operationId": "suppression.destroy",
+    "module": "Lettermint.Suppressions",
+    "method": "delete",
+    "verb": "DELETE",
+    "path": "/suppressions/{suppressionId}",
+    "params": [
+      "suppressionId"
+    ],
+    "payload": false,
+    "request": null,
+    "response": "{:model, Lettermint.Models.SuppressionDestroyResponse}"
+  },
+  {
+    "surface": "team",
+    "operationId": "team.show",
+    "module": "Lettermint.Team",
+    "method": "retrieve",
+    "verb": "GET",
+    "path": "/team",
+    "params": [],
+    "payload": false,
+    "request": null,
+    "response": "{:model, Lettermint.Models.TeamData}"
+  },
+  {
+    "surface": "team",
+    "operationId": "team.update",
+    "module": "Lettermint.Team",
+    "method": "update",
+    "verb": "PUT",
+    "path": "/team",
+    "params": [],
+    "payload": true,
+    "request": "{:model, Lettermint.Models.UpdateTeamData}",
+    "response": "{:model, Lettermint.Models.TeamUpdateResponse}"
+  },
+  {
+    "surface": "team",
+    "operationId": "team.usage",
+    "module": "Lettermint.Team",
+    "method": "usage",
+    "verb": "GET",
+    "path": "/team/usage",
+    "params": [],
+    "payload": false,
+    "request": null,
+    "response": "{:model, Lettermint.Models.TeamUsageDetailData}"
+  },
+  {
+    "surface": "team",
+    "operationId": "team.roles",
+    "module": "Lettermint.Team",
+    "method": "roles",
+    "verb": "GET",
+    "path": "/team/roles",
+    "params": [],
+    "payload": false,
+    "request": null,
+    "response": "{:model, Lettermint.Models.TeamRolesResponse}"
+  },
+  {
+    "surface": "team",
+    "operationId": "team.members",
+    "module": "Lettermint.Team",
+    "method": "members",
+    "verb": "GET",
+    "path": "/team/members",
+    "params": [],
+    "payload": false,
+    "request": null,
+    "response": "{:model, Lettermint.Models.TeamMembersResponse}"
+  },
+  {
+    "surface": "team",
+    "operationId": "team.members.show",
+    "module": "Lettermint.Team",
+    "method": "retrieve_member",
+    "verb": "GET",
+    "path": "/team/members/{userId}",
+    "params": [
+      "userId"
+    ],
+    "payload": false,
+    "request": null,
+    "response": "{:model, Lettermint.Models.TeamMemberData}"
+  },
+  {
+    "surface": "team",
+    "operationId": "team.members.assignment.update",
+    "module": "Lettermint.Team",
+    "method": "update_member_assignment",
+    "verb": "PUT",
+    "path": "/team/members/{userId}/assignment",
+    "params": [
+      "userId"
+    ],
+    "payload": true,
+    "request": "{:model, Lettermint.Models.UpdateTeamMemberAssignmentData}",
+    "response": "{:model, Lettermint.Models.TeamMemberData}"
+  },
+  {
+    "surface": "team",
+    "operationId": "webhook.index",
+    "module": "Lettermint.Webhooks",
+    "method": "list",
+    "verb": "GET",
+    "path": "/webhooks",
+    "params": [],
+    "payload": false,
+    "request": null,
+    "response": "{:model, Lettermint.Models.WebhookIndexResponse}"
+  },
+  {
+    "surface": "team",
+    "operationId": "webhook.store",
+    "module": "Lettermint.Webhooks",
+    "method": "create",
+    "verb": "POST",
+    "path": "/webhooks",
+    "params": [],
+    "payload": true,
+    "request": "{:model, Lettermint.Models.StoreWebhookData}",
+    "response": "{:model, Lettermint.Models.WebhookStoreResponse}"
+  },
+  {
+    "surface": "team",
+    "operationId": "webhook.show",
+    "module": "Lettermint.Webhooks",
+    "method": "retrieve",
+    "verb": "GET",
+    "path": "/webhooks/{webhookId}",
+    "params": [
+      "webhookId"
+    ],
+    "payload": false,
+    "request": null,
+    "response": "{:model, Lettermint.Models.WebhookData}"
+  },
+  {
+    "surface": "team",
+    "operationId": "webhook.update",
+    "module": "Lettermint.Webhooks",
+    "method": "update",
+    "verb": "PUT",
+    "path": "/webhooks/{webhookId}",
+    "params": [
+      "webhookId"
+    ],
+    "payload": true,
+    "request": "{:model, Lettermint.Models.UpdateWebhookData}",
+    "response": "{:model, Lettermint.Models.WebhookUpdateResponse}"
+  },
+  {
+    "surface": "team",
+    "operationId": "webhook.destroy",
+    "module": "Lettermint.Webhooks",
+    "method": "delete",
+    "verb": "DELETE",
+    "path": "/webhooks/{webhookId}",
+    "params": [
+      "webhookId"
+    ],
+    "payload": false,
+    "request": null,
+    "response": "{:model, Lettermint.Models.WebhookDestroyResponse}"
+  },
+  {
+    "surface": "team",
+    "operationId": "webhook.test",
+    "module": "Lettermint.Webhooks",
+    "method": "test",
+    "verb": "POST",
+    "path": "/webhooks/{webhookId}/test",
+    "params": [
+      "webhookId"
+    ],
+    "payload": false,
+    "request": null,
+    "response": "{:model, Lettermint.Models.WebhookTestResponse}"
+  },
+  {
+    "surface": "team",
+    "operationId": "webhook.regenerateSecret",
+    "module": "Lettermint.Webhooks",
+    "method": "regenerate_secret",
+    "verb": "POST",
+    "path": "/webhooks/{webhookId}/regenerate-secret",
+    "params": [
+      "webhookId"
+    ],
+    "payload": false,
+    "request": null,
+    "response": "{:model, Lettermint.Models.WebhookRegenerateSecretResponse}"
+  },
+  {
+    "surface": "team",
+    "operationId": "webhook.deliveries",
+    "module": "Lettermint.Webhooks",
+    "method": "deliveries",
+    "verb": "GET",
+    "path": "/webhooks/{webhookId}/deliveries",
+    "params": [
+      "webhookId"
+    ],
+    "payload": false,
+    "request": null,
+    "response": "{:model, Lettermint.Models.WebhookDeliveriesResponse}"
+  },
+  {
+    "surface": "team",
+    "operationId": "webhook.showDelivery",
+    "module": "Lettermint.Webhooks",
+    "method": "show_delivery",
+    "verb": "GET",
+    "path": "/webhooks/{webhookId}/deliveries/{deliveryId}",
+    "params": [
+      "webhookId",
+      "deliveryId"
+    ],
+    "payload": false,
+    "request": null,
+    "response": "{:model, Lettermint.Models.WebhookDeliveryData}"
+  }
+]

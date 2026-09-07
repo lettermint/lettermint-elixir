@@ -1,0 +1,49 @@
+name: Release
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  ci:
+    name: Verify release
+    uses: ./.github/workflows/ci.yml
+
+  publish:
+    name: Publish package and documentation
+    needs: ci
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: erlef/setup-beam@v1
+        with:
+          elixir-version: '1.20.4'
+          otp-version: '29.0'
+      - run: mix deps.get --check-locked
+      - name: Publish to Hex and HexDocs
+        env:
+          HEX_API_KEY: ${{ secrets.HEX_API_KEY }}
+        run: mix hex.publish --yes
+
+  changelog:
+    needs: publish
+    permissions:
+      contents: write
+      pull-requests: write
+    uses: ./.github/workflows/update-changelog.yml
+
+  discord:
+    needs: publish
+    uses: ./.github/workflows/release-to-discord.yml
+    secrets:
+      DISCORD_RELEASE_WEBHOOK_URL: ${{ secrets.DISCORD_RELEASE_WEBHOOK_URL }}

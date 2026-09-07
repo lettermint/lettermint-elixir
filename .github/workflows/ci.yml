@@ -1,0 +1,79 @@
+name: CI
+
+on:
+  push:
+    branches: [main, next]
+  pull_request:
+  workflow_call:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.event_name }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    timeout-minutes: 20
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - elixir: '1.15.8'
+            otp: '26.2'
+          - elixir: '1.20.4'
+            otp: '29.0'
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: erlef/setup-beam@v1
+        with:
+          elixir-version: ${{ matrix.elixir }}
+          otp-version: ${{ matrix.otp }}
+      - uses: actions/cache@v5
+        with:
+          path: deps
+          key: deps-${{ runner.os }}-${{ matrix.elixir }}-${{ matrix.otp }}-${{ hashFiles('mix.lock') }}
+      - run: mix deps.get --check-locked
+      - name: Check release version
+        if: github.event_name == 'release'
+        env:
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+        run: |
+          mix run --no-start -e '
+            tag = System.fetch_env!("RELEASE_TAG") |> String.trim_leading("v")
+            unless tag == Mix.Project.config()[:version] do
+              raise "Release tag must match the version in mix.exs"
+            end
+          '
+      - uses: actions/setup-python@v7
+        if: matrix.elixir == '1.20.4'
+        with:
+          python-version: '3.12'
+      - name: Check generated source
+        if: matrix.elixir == '1.20.4'
+        run: |
+          python3 tools/generate.py --check
+          python3 -m unittest discover -s tools -p 'test_*.py'
+      - if: matrix.elixir == '1.20.4'
+        run: mix format --check-formatted
+      - run: mix compile --warnings-as-errors
+      - run: mix test --warnings-as-errors
+      - if: matrix.elixir == '1.20.4'
+        run: mix hex.audit
+      - name: Check package and documentation
+        if: matrix.elixir == '1.20.4'
+        run: |
+          mix docs --warnings-as-errors
+          mix hex.build
+      - uses: actions/upload-artifact@v7
+        if: matrix.elixir == '1.20.4'
+        with:
+          name: package
+          path: lettermint-*.tar
+          if-no-files-found: error
+          retention-days: 30

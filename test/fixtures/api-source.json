@@ -1,0 +1,1102 @@
+{
+    "models": {
+        "WebhookSecretData": {
+            "id": "fixture-value",
+            "scope": "team",
+            "project_ids": [],
+            "route_ids": [],
+            "route_id": "fixture-value",
+            "name": "fixture-value",
+            "url": "fixture-value",
+            "events": [],
+            "enabled": true,
+            "include_machine_events": true,
+            "secret": "fixture-value",
+            "last_called_at": "2026-09-07T12:00:00+00:00",
+            "created_at": "2026-09-07T12:00:00+00:00",
+            "updated_at": "2026-09-07T12:00:00+00:00"
+        },
+        "WebhookData": {
+            "id": "fixture-value",
+            "scope": "team",
+            "project_ids": [],
+            "route_ids": [],
+            "route_id": "fixture-value",
+            "name": "fixture-value",
+            "url": "fixture-value",
+            "events": [],
+            "enabled": true,
+            "include_machine_events": true,
+            "last_called_at": "2026-09-07T12:00:00+00:00",
+            "created_at": "2026-09-07T12:00:00+00:00",
+            "updated_at": "2026-09-07T12:00:00+00:00"
+        },
+        "WebhookListData": {
+            "id": "fixture-value",
+            "scope": "team",
+            "project_ids": [],
+            "route_ids": [],
+            "route_id": "fixture-value",
+            "name": "fixture-value",
+            "url": "fixture-value",
+            "events": [],
+            "enabled": true,
+            "last_called_at": "2026-09-07T12:00:00+00:00",
+            "created_at": "2026-09-07T12:00:00+00:00",
+            "updated_at": "2026-09-07T12:00:00+00:00"
+        },
+        "WebhookDeliveryData": {
+            "id": "fixture-value",
+            "webhook_id": "fixture-value",
+            "event_type": "message.created",
+            "source_scope": "fixture-value",
+            "source_project_id": "fixture-value",
+            "source_route_id": "fixture-value",
+            "status": "pending",
+            "attempt_number": 1,
+            "http_status_code": 1,
+            "duration_ms": 1,
+            "payload": [],
+            "response_body": "fixture-value",
+            "response_headers": [],
+            "error_message": "fixture-value",
+            "delivered_at": "2026-09-07T12:00:00+00:00",
+            "timestamp": "2026-09-07T12:00:00+00:00"
+        },
+        "WebhookDeliveryListData": {
+            "id": "fixture-value",
+            "webhook_id": "fixture-value",
+            "event_type": "message.created",
+            "source_scope": "fixture-value",
+            "source_project_id": "fixture-value",
+            "source_route_id": "fixture-value",
+            "status": "pending",
+            "attempt_number": 1,
+            "http_status_code": 1,
+            "duration_ms": 1,
+            "delivered_at": "2026-09-07T12:00:00+00:00",
+            "created_at": "2026-09-07T12:00:00+00:00"
+        },
+        "RouteStatisticData": {
+            "date": "fixture-value",
+            "sent_count": 1,
+            "delivered_count": 1,
+            "opened_count": 1,
+            "clicked_count": 1,
+            "hard_bounce_count": 1,
+            "spam_complaint_count": 1,
+            "inbound_received_count": 1,
+            "effective_opened_count": null,
+            "machine_opened_count": null,
+            "machine_clicked_count": null
+        },
+        "RouteListData": {
+            "id": "fixture-value",
+            "slug": "fixture-value",
+            "name": "fixture-value",
+            "route_type": "transactional",
+            "is_default": true,
+            "webhooks_count": 1,
+            "suppressed_recipients_count": 1,
+            "created_at": "2026-09-07T12:00:00+00:00",
+            "updated_at": "2026-09-07T12:00:00+00:00"
+        },
+        "RouteData": {
+            "id": "fixture-value",
+            "project_id": "fixture-value",
+            "slug": "fixture-value",
+            "name": "fixture-value",
+            "route_type": "transactional",
+            "is_default": true,
+            "created_at": "2026-09-07T12:00:00+00:00",
+            "updated_at": "2026-09-07T12:00:00+00:00"
+        },
+        "MessageData": {
+            "id": "fixture-value",
+            "type": "inbound",
+            "status": "scheduled",
+            "status_changed_at": "2026-09-07T12:00:00+00:00",
+            "scheduled_at": "2026-09-07T12:00:00+00:00",
+            "tag": "fixture-value",
+            "tags": [],
+            "from_email": "fixture-value",
+            "from_name": "fixture-value",
+            "reply_to": [],
+            "subject": "fixture-value",
+            "to": null,
+            "cc": null,
+            "bcc": null,
+            "attachments": null,
+            "metadata": [],
+            "route_id": "fixture-value",
+            "created_at": "2026-09-07T12:00:00+00:00"
+        },
+        "MessageRecipientData": {
+            "email": "fixture-value",
+            "name": "fixture-value"
+        },
+        "MessageListData": {
+            "id": "fixture-value",
+            "type": "inbound",
+            "status": "scheduled",
+            "scheduled_at": "2026-09-07T12:00:00+00:00",
+            "from_email": "fixture-value",
+            "from_name": "fixture-value",
+            "subject": "fixture-value",
+            "to": null,
+            "cc": null,
+            "bcc": null,
+            "reply_to": [],
+            "tag": "fixture-value",
+            "tags": [],
+            "status_changed_at": "fixture-value",
+            "created_at": "fixture-value"
+        },
+        "MessageAttachmentData": {
+            "size": 0,
+            "filename": "unknown",
+            "content_id": null,
+            "content_type": "application/octet-stream"
+        },
+        "MessageEventData": {
+            "message_id": "fixture-value",
+            "event": "scheduled",
+            "tag": "fixture-value",
+            "tags": [],
+            "metadata": [],
+            "timestamp": "2026-09-07T12:00:00+00:00"
+        },
+        "MessageStatsData": {
+            "messages_transactional": 1,
+            "messages_broadcast": 1,
+            "messages_inbound": 1,
+            "deliverability": 1.25
+        },
+        "ProjectListData": {
+            "id": "fixture-value",
+            "name": "fixture-value",
+            "smtp_enabled": true,
+            "routes_count": 1,
+            "domains_count": 1,
+            "last_28_days": {
+                "messages_transactional": 1,
+                "messages_broadcast": 1,
+                "messages_inbound": 1,
+                "deliverability": 1.25
+            },
+            "created_at": "fixture-value",
+            "updated_at": "fixture-value"
+        },
+        "ProjectData": {
+            "id": "fixture-value",
+            "name": "fixture-value",
+            "smtp_enabled": true,
+            "redact_email_content": true,
+            "default_route_id": "fixture-value",
+            "token_generated_at": "2026-09-07T12:00:00+00:00",
+            "token_last_used_at": "2026-09-07T12:00:00+00:00",
+            "token_last_used_ip": "fixture-value",
+            "created_at": "fixture-value",
+            "updated_at": "fixture-value"
+        },
+        "SuppressedRecipientData": {
+            "id": "fixture-value",
+            "type": "email",
+            "value": "fixture-value",
+            "reason": "spam_complaint",
+            "scope": "team",
+            "applies_to": "all",
+            "project_id": "fixture-value",
+            "route_id": "fixture-value",
+            "created_at": "2026-09-07T12:00:00+00:00"
+        },
+        "TeamAddonData": {
+            "type": "fixture-value",
+            "expires_at": "fixture-value"
+        },
+        "TeamMemberProjectAccessData": {
+            "scope": "all",
+            "projects": []
+        },
+        "TeamRoleData": {
+            "id": "fixture-value",
+            "name": "fixture-value",
+            "system_key": "owner",
+            "permissions": [],
+            "assignable": true
+        },
+        "TeamUsagePeriodData": {
+            "usage": 1,
+            "last_incremented_at": "2026-09-07T12:00:00+00:00",
+            "period_start": "2026-09-07T12:00:00+00:00",
+            "period_end": "2026-09-07T12:00:00+00:00"
+        },
+        "TeamData": {
+            "id": "fixture-value",
+            "name": "fixture-value",
+            "type": "personal",
+            "plan": "free",
+            "included_volume": 1,
+            "tier": 1,
+            "verified_at": "2026-09-07T12:00:00+00:00",
+            "created_at": "2026-09-07T12:00:00+00:00"
+        },
+        "TeamMemberData": {
+            "id": "fixture-value",
+            "name": "fixture-value",
+            "email": "fixture-value",
+            "role": {
+                "id": "role-id",
+                "name": "Member"
+            },
+            "project_access": {
+                "scope": "all",
+                "projects": []
+            },
+            "joined_at": "2026-09-07T12:00:00+00:00"
+        },
+        "TeamUsageDetailData": {
+            "current_period": {
+                "usage": 1,
+                "last_incremented_at": "2026-09-07T12:00:00+00:00",
+                "period_start": "2026-09-07T12:00:00+00:00",
+                "period_end": "2026-09-07T12:00:00+00:00"
+            },
+            "historical_usage": []
+        },
+        "DomainData": {
+            "id": "fixture-value",
+            "domain": "fixture-value",
+            "dkim_mode": "legacy_txt",
+            "rotation_ready": true,
+            "status_changed_at": "2026-09-07T12:00:00+00:00",
+            "created_at": "2026-09-07T12:00:00+00:00"
+        },
+        "DomainListData": {
+            "id": "fixture-value",
+            "domain": "fixture-value",
+            "status": "verified",
+            "dkim_mode": "legacy_txt",
+            "status_changed_at": "2026-09-07T12:00:00+00:00",
+            "created_at": "2026-09-07T12:00:00+00:00"
+        },
+        "DomainDnsRecordData": {
+            "id": "fixture-value",
+            "type": "TXT",
+            "hostname": "fixture-value",
+            "fqdn": "fixture-value",
+            "content": "fixture-value",
+            "status": "active",
+            "purpose": "return_path",
+            "verification_scope": "required",
+            "required_for_verification": true,
+            "verified_at": "fixture-value",
+            "last_checked_at": "2026-09-07T12:00:00+00:00"
+        },
+        "StatsTypeData": {
+            "sent": 1,
+            "hard_bounced": 1,
+            "spam_complaints": 1
+        },
+        "StatsInboundData": {
+            "received": 1
+        },
+        "StatsTotalsData": {
+            "sent": 1,
+            "delivered": 1,
+            "hard_bounced": 1,
+            "spam_complaints": 1,
+            "opened": 1,
+            "clicked": 1,
+            "inbound": {
+                "received": 1
+            },
+            "transactional": null,
+            "broadcast": null,
+            "effective_opened": null,
+            "machine_opened": null,
+            "machine_clicked": null
+        },
+        "StatsDailyData": {
+            "date": "fixture-value",
+            "sent": 1,
+            "delivered": 1,
+            "hard_bounced": 1,
+            "spam_complaints": 1,
+            "opened": 1,
+            "clicked": 1,
+            "inbound": {
+                "received": 1
+            },
+            "transactional": null,
+            "broadcast": null,
+            "effective_opened": null,
+            "machine_opened": null,
+            "machine_clicked": null
+        },
+        "StatsData": {
+            "from": "fixture-value",
+            "to": "fixture-value",
+            "totals": {
+                "sent": 1,
+                "delivered": 1,
+                "hard_bounced": 1,
+                "spam_complaints": 1,
+                "opened": 1,
+                "clicked": 1,
+                "inbound": {
+                    "received": 1
+                },
+                "transactional": null,
+                "broadcast": null,
+                "effective_opened": null,
+                "machine_opened": null,
+                "machine_clicked": null
+            },
+            "daily": []
+        }
+    },
+    "enums": {
+        "AttachmentDelivery": [
+            "inline",
+            "url"
+        ],
+        "BuiltInTeamRole": [
+            "owner",
+            "admin",
+            "member"
+        ],
+        "DkimMode": [
+            "legacy_txt",
+            "managed_cname"
+        ],
+        "DnsRecordPurpose": [
+            "return_path",
+            "dmarc",
+            "dkim_legacy",
+            "dkim_primary",
+            "dkim_secondary"
+        ],
+        "DnsRecordStatus": [
+            "active",
+            "failed",
+            "pending"
+        ],
+        "DnsVerificationScope": [
+            "required",
+            "recommended",
+            "migration",
+            "deprecated"
+        ],
+        "DomainStatus": [
+            "verified",
+            "partially_verified",
+            "pending_verification",
+            "failed_verification"
+        ],
+        "InitialRoutes": [
+            "both",
+            "transactional",
+            "broadcast"
+        ],
+        "MessageEventType": [
+            "scheduled",
+            "rescheduled",
+            "canceled",
+            "released",
+            "queued",
+            "processed",
+            "suppressed",
+            "delivered",
+            "auto_replied",
+            "soft_bounced",
+            "hard_bounced",
+            "spam_complaint",
+            "failed",
+            "blocked",
+            "policy_rejected",
+            "unsubscribed",
+            "opened",
+            "clicked",
+            "inbound_received",
+            "inbound_queued",
+            "inbound_spam_blocked",
+            "inbound_released",
+            "inbound_processed",
+            "inbound_retry"
+        ],
+        "MessageStatus": [
+            "scheduled",
+            "pending",
+            "queued",
+            "quarantined",
+            "suppressed",
+            "processed",
+            "delivered",
+            "opened",
+            "clicked",
+            "soft_bounced",
+            "hard_bounced",
+            "spam_complaint",
+            "failed",
+            "blocked",
+            "policy_rejected",
+            "unsubscribed",
+            "canceled"
+        ],
+        "MessageType": [
+            "inbound",
+            "outbound"
+        ],
+        "Plan": [
+            "free",
+            "starter",
+            "growth",
+            "pro"
+        ],
+        "ProjectAccessScope": [
+            "all",
+            "selected"
+        ],
+        "RbacConflictCode": [
+            "stale_resource",
+            "owner_protected",
+            "last_owner",
+            "built_in_role_immutable",
+            "custom_role_requires_pro"
+        ],
+        "RbacPermission": [
+            "team:manage",
+            "billing:manage",
+            "security:manage",
+            "audit:read",
+            "support:manage",
+            "members:read",
+            "members:manage",
+            "roles:manage",
+            "team_tokens:read",
+            "team_tokens:manage",
+            "team_tokens:rotate",
+            "team_tokens:revoke",
+            "projects:create",
+            "team_suppressions:read",
+            "team_suppressions:add",
+            "team_suppressions:remove",
+            "projects:read",
+            "projects:manage",
+            "projects:delete",
+            "routes:read",
+            "routes:manage",
+            "routes:delete",
+            "domains:read",
+            "domains:manage",
+            "domains:delete",
+            "project_tokens:read",
+            "project_tokens:manage",
+            "project_tokens:rotate",
+            "project_tokens:revoke",
+            "webhooks:read",
+            "webhooks:manage",
+            "webhooks:delete",
+            "webhooks:rotate_secret",
+            "stats:read",
+            "messages:read",
+            "messages:read_content",
+            "messages:send",
+            "suppressions:read",
+            "suppressions:add",
+            "suppressions:remove"
+        ],
+        "RecordType": [
+            "TXT",
+            "CNAME",
+            "MX"
+        ],
+        "RouteType": [
+            "transactional",
+            "broadcast",
+            "inbound"
+        ],
+        "SuppressionAppliesTo": [
+            "all",
+            "broadcast"
+        ],
+        "SuppressionReason": [
+            "spam_complaint",
+            "hard_bounce",
+            "unsubscribe",
+            "manual"
+        ],
+        "SuppressionScope": [
+            "team",
+            "project",
+            "route"
+        ],
+        "SuppressionType": [
+            "email",
+            "domain",
+            "extension"
+        ],
+        "TeamType": [
+            "personal",
+            "business"
+        ],
+        "TlsPolicy": [
+            "opportunistic",
+            "enforced"
+        ],
+        "WebhookDeliveryStatus": [
+            "pending",
+            "success",
+            "failed",
+            "client_error",
+            "server_error",
+            "timeout"
+        ],
+        "WebhookEvent": [
+            "message.created",
+            "message.sent",
+            "message.delivered",
+            "message.auto_replied",
+            "message.hard_bounced",
+            "message.soft_bounced",
+            "message.spam_complaint",
+            "message.failed",
+            "message.suppressed",
+            "message.unsubscribed",
+            "message.opened",
+            "message.clicked",
+            "message.inbound",
+            "message.policy_rejected",
+            "message.scheduled",
+            "message.rescheduled",
+            "message.canceled",
+            "message.released",
+            "suppression.added",
+            "suppression.removed",
+            "webhook.test"
+        ],
+        "WebhookScope": [
+            "team",
+            "project",
+            "route"
+        ]
+    },
+    "routes": [
+        {
+            "method": "POST",
+            "path": "/send/batch"
+        },
+        {
+            "method": "POST",
+            "path": "/send"
+        },
+        {
+            "method": "GET",
+            "path": "/ping"
+        },
+        {
+            "method": "PATCH",
+            "path": "/messages/{messageId}"
+        },
+        {
+            "method": "POST",
+            "path": "/messages/{messageId}/cancel"
+        },
+        {
+            "method": "GET",
+            "path": "/blocked-file-types"
+        },
+        {
+            "method": "GET",
+            "path": "/team"
+        },
+        {
+            "method": "PUT",
+            "path": "/team"
+        },
+        {
+            "method": "GET",
+            "path": "/team/usage"
+        },
+        {
+            "method": "GET",
+            "path": "/team/roles"
+        },
+        {
+            "method": "GET",
+            "path": "/team/members"
+        },
+        {
+            "method": "GET",
+            "path": "/team/members/{userId}"
+        },
+        {
+            "method": "PUT",
+            "path": "/team/members/{userId}/assignment"
+        },
+        {
+            "method": "GET",
+            "path": "/domains"
+        },
+        {
+            "method": "POST",
+            "path": "/domains"
+        },
+        {
+            "method": "GET",
+            "path": "/domains/{domainId}"
+        },
+        {
+            "method": "DELETE",
+            "path": "/domains/{domainId}"
+        },
+        {
+            "method": "POST",
+            "path": "/domains/{domainId}/dns-records/verify"
+        },
+        {
+            "method": "POST",
+            "path": "/domains/{domainId}/dns-records/{recordId}/verify"
+        },
+        {
+            "method": "PUT",
+            "path": "/domains/{domainId}/projects"
+        },
+        {
+            "method": "GET",
+            "path": "/projects"
+        },
+        {
+            "method": "POST",
+            "path": "/projects"
+        },
+        {
+            "method": "GET",
+            "path": "/projects/{projectId}"
+        },
+        {
+            "method": "PUT",
+            "path": "/projects/{projectId}"
+        },
+        {
+            "method": "DELETE",
+            "path": "/projects/{projectId}"
+        },
+        {
+            "method": "POST",
+            "path": "/projects/{projectId}/rotate-token"
+        },
+        {
+            "method": "GET",
+            "path": "/projects/{projectId}/routes"
+        },
+        {
+            "method": "POST",
+            "path": "/projects/{projectId}/routes"
+        },
+        {
+            "method": "GET",
+            "path": "/routes/{routeId}"
+        },
+        {
+            "method": "PUT",
+            "path": "/routes/{routeId}"
+        },
+        {
+            "method": "DELETE",
+            "path": "/routes/{routeId}"
+        },
+        {
+            "method": "POST",
+            "path": "/routes/{routeId}/verify-inbound-domain"
+        },
+        {
+            "method": "GET",
+            "path": "/webhooks"
+        },
+        {
+            "method": "POST",
+            "path": "/webhooks"
+        },
+        {
+            "method": "GET",
+            "path": "/webhooks/{webhookId}"
+        },
+        {
+            "method": "PUT",
+            "path": "/webhooks/{webhookId}"
+        },
+        {
+            "method": "DELETE",
+            "path": "/webhooks/{webhookId}"
+        },
+        {
+            "method": "POST",
+            "path": "/webhooks/{webhookId}/test"
+        },
+        {
+            "method": "POST",
+            "path": "/webhooks/{webhookId}/regenerate-secret"
+        },
+        {
+            "method": "GET",
+            "path": "/webhooks/{webhookId}/deliveries"
+        },
+        {
+            "method": "GET",
+            "path": "/webhooks/{webhookId}/deliveries/{deliveryId}"
+        },
+        {
+            "method": "GET",
+            "path": "/messages"
+        },
+        {
+            "method": "GET",
+            "path": "/messages/{messageId}"
+        },
+        {
+            "method": "GET",
+            "path": "/messages/{messageId}/events"
+        },
+        {
+            "method": "GET",
+            "path": "/messages/{messageId}/source"
+        },
+        {
+            "method": "GET",
+            "path": "/messages/{messageId}/html"
+        },
+        {
+            "method": "GET",
+            "path": "/messages/{messageId}/text"
+        },
+        {
+            "method": "POST",
+            "path": "/messages/{messageId}/process"
+        },
+        {
+            "method": "GET",
+            "path": "/suppressions"
+        },
+        {
+            "method": "POST",
+            "path": "/suppressions"
+        },
+        {
+            "method": "DELETE",
+            "path": "/suppressions/{suppressionId}"
+        },
+        {
+            "method": "GET",
+            "path": "/stats"
+        }
+    ],
+    "pages": {
+        "MessageIndexResponse": {
+            "data": [
+                {
+                    "id": "fixture-value",
+                    "type": "inbound",
+                    "status": "scheduled",
+                    "scheduled_at": "2026-09-07T12:00:00+00:00",
+                    "from_email": "fixture-value",
+                    "from_name": "fixture-value",
+                    "subject": "fixture-value",
+                    "to": null,
+                    "cc": null,
+                    "bcc": null,
+                    "reply_to": [],
+                    "tag": "fixture-value",
+                    "tags": [],
+                    "status_changed_at": "fixture-value",
+                    "created_at": "fixture-value"
+                }
+            ],
+            "path": "https://api.lettermint.co/v1/fixture",
+            "per_page": 1,
+            "next_cursor": "eyJpZCI6ImZpeHR1cmUtdmFsdWUiLCJfcG9pbnRzVG9OZXh0SXRlbXMiOnRydWV9",
+            "next_page_url": "https://api.lettermint.co/v1/fixture?cursor=eyJpZCI6ImZpeHR1cmUtdmFsdWUiLCJfcG9pbnRzVG9OZXh0SXRlbXMiOnRydWV9",
+            "prev_cursor": null,
+            "prev_page_url": null
+        },
+        "MessageEventsResponse": {
+            "data": [
+                {
+                    "message_id": "fixture-value",
+                    "event": "scheduled",
+                    "tag": "fixture-value",
+                    "tags": [],
+                    "metadata": [],
+                    "timestamp": "2026-09-07T12:00:00+00:00"
+                }
+            ],
+            "path": "https://api.lettermint.co/v1/fixture",
+            "per_page": 1,
+            "next_cursor": "eyJpZCI6MSwiX3BvaW50c1RvTmV4dEl0ZW1zIjp0cnVlfQ",
+            "next_page_url": "https://api.lettermint.co/v1/fixture?cursor=eyJpZCI6MSwiX3BvaW50c1RvTmV4dEl0ZW1zIjp0cnVlfQ",
+            "prev_cursor": null,
+            "prev_page_url": null
+        },
+        "DomainIndexResponse": {
+            "data": [
+                {
+                    "id": "fixture-value",
+                    "domain": "fixture-value",
+                    "status": "verified",
+                    "dkim_mode": "legacy_txt",
+                    "status_changed_at": "2026-09-07T12:00:00+00:00",
+                    "created_at": "2026-09-07T12:00:00+00:00"
+                }
+            ],
+            "path": "https://api.lettermint.co/v1/fixture",
+            "per_page": 1,
+            "next_cursor": "eyJpZCI6ImZpeHR1cmUtdmFsdWUiLCJfcG9pbnRzVG9OZXh0SXRlbXMiOnRydWV9",
+            "next_page_url": "https://api.lettermint.co/v1/fixture?cursor=eyJpZCI6ImZpeHR1cmUtdmFsdWUiLCJfcG9pbnRzVG9OZXh0SXRlbXMiOnRydWV9",
+            "prev_cursor": null,
+            "prev_page_url": null
+        },
+        "ProjectIndexResponse": {
+            "data": [
+                {
+                    "id": "fixture-value",
+                    "name": "fixture-value",
+                    "smtp_enabled": true,
+                    "routes_count": 1,
+                    "domains_count": 1,
+                    "last_28_days": {
+                        "messages_transactional": 1,
+                        "messages_broadcast": 1,
+                        "messages_inbound": 1,
+                        "deliverability": 1.25
+                    },
+                    "created_at": "fixture-value",
+                    "updated_at": "fixture-value"
+                }
+            ],
+            "path": "https://api.lettermint.co/v1/fixture",
+            "per_page": 1,
+            "next_cursor": "eyJpZCI6ImZpeHR1cmUtdmFsdWUiLCJfcG9pbnRzVG9OZXh0SXRlbXMiOnRydWV9",
+            "next_page_url": "https://api.lettermint.co/v1/fixture?cursor=eyJpZCI6ImZpeHR1cmUtdmFsdWUiLCJfcG9pbnRzVG9OZXh0SXRlbXMiOnRydWV9",
+            "prev_cursor": null,
+            "prev_page_url": null
+        },
+        "RouteIndexResponse": {
+            "data": [
+                {
+                    "id": "fixture-value",
+                    "slug": "fixture-value",
+                    "name": "fixture-value",
+                    "route_type": "transactional",
+                    "is_default": true,
+                    "webhooks_count": 1,
+                    "suppressed_recipients_count": 1,
+                    "created_at": "2026-09-07T12:00:00+00:00",
+                    "updated_at": "2026-09-07T12:00:00+00:00"
+                }
+            ],
+            "path": "https://api.lettermint.co/v1/fixture",
+            "per_page": 1,
+            "next_cursor": "eyJpZCI6ImZpeHR1cmUtdmFsdWUiLCJfcG9pbnRzVG9OZXh0SXRlbXMiOnRydWV9",
+            "next_page_url": "https://api.lettermint.co/v1/fixture?cursor=eyJpZCI6ImZpeHR1cmUtdmFsdWUiLCJfcG9pbnRzVG9OZXh0SXRlbXMiOnRydWV9",
+            "prev_cursor": null,
+            "prev_page_url": null
+        },
+        "SuppressionIndexResponse": {
+            "data": [
+                {
+                    "id": "fixture-value",
+                    "type": "email",
+                    "value": "fixture-value",
+                    "reason": "spam_complaint",
+                    "scope": "team",
+                    "applies_to": "all",
+                    "project_id": "fixture-value",
+                    "route_id": "fixture-value",
+                    "created_at": "2026-09-07T12:00:00+00:00"
+                }
+            ],
+            "path": "https://api.lettermint.co/v1/fixture",
+            "per_page": 1,
+            "next_cursor": "eyJpZCI6ImZpeHR1cmUtdmFsdWUiLCJfcG9pbnRzVG9OZXh0SXRlbXMiOnRydWV9",
+            "next_page_url": "https://api.lettermint.co/v1/fixture?cursor=eyJpZCI6ImZpeHR1cmUtdmFsdWUiLCJfcG9pbnRzVG9OZXh0SXRlbXMiOnRydWV9",
+            "prev_cursor": null,
+            "prev_page_url": null
+        },
+        "WebhookIndexResponse": {
+            "data": [
+                {
+                    "id": "fixture-value",
+                    "scope": "team",
+                    "project_ids": [],
+                    "route_ids": [],
+                    "route_id": "fixture-value",
+                    "name": "fixture-value",
+                    "url": "fixture-value",
+                    "events": [],
+                    "enabled": true,
+                    "last_called_at": "2026-09-07T12:00:00+00:00",
+                    "created_at": "2026-09-07T12:00:00+00:00",
+                    "updated_at": "2026-09-07T12:00:00+00:00"
+                }
+            ],
+            "path": "https://api.lettermint.co/v1/fixture",
+            "per_page": 1,
+            "next_cursor": "eyJpZCI6ImZpeHR1cmUtdmFsdWUiLCJfcG9pbnRzVG9OZXh0SXRlbXMiOnRydWV9",
+            "next_page_url": "https://api.lettermint.co/v1/fixture?cursor=eyJpZCI6ImZpeHR1cmUtdmFsdWUiLCJfcG9pbnRzVG9OZXh0SXRlbXMiOnRydWV9",
+            "prev_cursor": null,
+            "prev_page_url": null
+        },
+        "WebhookDeliveriesResponse": {
+            "data": [
+                {
+                    "id": "fixture-value",
+                    "webhook_id": "fixture-value",
+                    "event_type": "message.created",
+                    "source_scope": "fixture-value",
+                    "source_project_id": "fixture-value",
+                    "source_route_id": "fixture-value",
+                    "status": "pending",
+                    "attempt_number": 1,
+                    "http_status_code": 1,
+                    "duration_ms": 1,
+                    "delivered_at": "2026-09-07T12:00:00+00:00",
+                    "created_at": "2026-09-07T12:00:00+00:00"
+                }
+            ],
+            "path": "https://api.lettermint.co/v1/fixture",
+            "per_page": 1,
+            "next_cursor": "eyJpZCI6ImZpeHR1cmUtdmFsdWUiLCJfcG9pbnRzVG9OZXh0SXRlbXMiOnRydWV9",
+            "next_page_url": "https://api.lettermint.co/v1/fixture?cursor=eyJpZCI6ImZpeHR1cmUtdmFsdWUiLCJfcG9pbnRzVG9OZXh0SXRlbXMiOnRydWV9",
+            "prev_cursor": null,
+            "prev_page_url": null
+        }
+    },
+    "route_settings": {
+        "id": "fixture-value",
+        "project_id": "fixture-value",
+        "slug": "fixture-value",
+        "name": "fixture-value",
+        "route_type": "transactional",
+        "is_default": true,
+        "settings": {
+            "attachment_delivery": "url",
+            "tls": "enforced",
+            "track_opens": false
+        },
+        "statistics": [],
+        "created_at": "2026-09-07T12:00:00+00:00",
+        "updated_at": "2026-09-07T12:00:00+00:00"
+    },
+    "SendMailController": {
+        "immediate": {
+            "message_id": "00000000-0000-4000-8000-000000000001",
+            "status": "pending"
+        },
+        "scheduled": {
+            "message_id": "00000000-0000-4000-8000-000000000001",
+            "status": "scheduled",
+            "scheduled_at": "2026-09-08T12:00:00+00:00"
+        }
+    },
+    "SendBatchMailController": {
+        "immediate": {
+            "message_id": "00000000-0000-4000-8000-000000000001",
+            "status": "pending"
+        },
+        "scheduled": {
+            "message_id": "00000000-0000-4000-8000-000000000001",
+            "status": "scheduled",
+            "scheduled_at": "2026-09-08T12:00:00+00:00"
+        }
+    },
+    "suppression_removed": {
+        "success": true,
+        "status": "removed",
+        "message": "Email removed from suppression list successfully."
+    },
+    "suppression_review": {
+        "success": true,
+        "status": "review_ticket_created",
+        "message": "A support ticket has been created for manual suppression removal review.",
+        "ticket_identifier": "SUP-123",
+        "confidence": 0.75
+    },
+    "webhook_signature": {
+        "signature": "t=1788782400,v1=ad71837b0bfd7c1c78a5cbe0ad9fbddb3c7acea75ac7ca3b966e66a76fc127c2",
+        "body": "{\"url\":\"https://example.com/path\",\"name\":\"Café\"}"
+    },
+    "request_rules": {
+        "single": [
+            "route",
+            "from",
+            "to",
+            "to.*",
+            "cc",
+            "cc.*",
+            "bcc",
+            "bcc.*",
+            "reply_to",
+            "reply_to.*",
+            "subject",
+            "scheduled_at",
+            "headers",
+            "headers.*",
+            "metadata",
+            "metadata.*",
+            "tag",
+            "tags",
+            "tags.*",
+            "tags.*.name",
+            "tags.*.value",
+            "settings",
+            "settings.track_opens",
+            "settings.track_clicks",
+            "settings.tls",
+            "html",
+            "text",
+            "attachments",
+            "attachments.*",
+            "attachments.*.filename",
+            "attachments.*.content",
+            "attachments.*.content_type",
+            "attachments.*.content_id"
+        ],
+        "batch": [
+            "*",
+            "*.route",
+            "*.from",
+            "*.to",
+            "*.to.*",
+            "*.cc",
+            "*.cc.*",
+            "*.bcc",
+            "*.bcc.*",
+            "*.reply_to",
+            "*.reply_to.*",
+            "*.subject",
+            "*.scheduled_at",
+            "*.headers",
+            "*.headers.*",
+            "*.metadata",
+            "*.metadata.*",
+            "*.tag",
+            "*.tags",
+            "*.tags.*",
+            "*.tags.*.name",
+            "*.tags.*.value",
+            "*.settings",
+            "*.settings.track_opens",
+            "*.settings.track_clicks",
+            "*.settings.tls",
+            "*.html",
+            "*.text",
+            "*.attachments",
+            "*.attachments.*",
+            "*.attachments.*.filename",
+            "*.attachments.*.content",
+            "*.attachments.*.content_type",
+            "*.attachments.*.content_id"
+        ]
+    }
+}

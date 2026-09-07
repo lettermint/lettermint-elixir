@@ -1,0 +1,8 @@
+/_build/
+/deps/
+/doc/
+/*.ez
+/*.tar
+/cover/
+.env
+__pycache__/
