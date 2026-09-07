@@ -1,5 +1,9 @@
 # Changelog
 
+## v1.0.0 - 2026-09-07
+
+**Full Changelog**: https://github.com/lettermint/lettermint-elixir/commits/v1.0.0
+
 ## Unreleased
 
 - Add separate sending and team clients.
