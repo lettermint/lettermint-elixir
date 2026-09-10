@@ -30,6 +30,7 @@ Use a project token for email operations. Use a team token for management operat
 
 ```elixir
 client = Lettermint.email(System.fetch_env!("LETTERMINT_PROJECT_TOKEN"))
+alias Lettermint.MessageTag
 
 {:ok, message} = Lettermint.Email.send(client, %{
   from: "Example <sender@example.com>",
@@ -37,13 +38,17 @@ client = Lettermint.email(System.fetch_env!("LETTERMINT_PROJECT_TOKEN"))
   subject: "Hello",
   text: "Hello from Elixir",
   metadata: %{order_id: "123"},
-  tags: [%{name: "type", value: "receipt"}],
+  tag: "legacy-tag",
+  tags: [MessageTag.new!("type", "receipt")],
   settings: %{tls: "enforced"}
 }, idempotency_key: "receipt-123")
 
 message.message_id
 message.status
 ```
+
+The legacy `tag` field remains available. `MessageTag.new!/2` validates typed
+name/value tags before the request is sent.
 
 All API calls return `{:ok, result}` or `{:error, %Lettermint.Error{}}`. Invalid local arguments raise `ArgumentError`. JSON responses use generated structs. Raw message source, HTML, and text remain unchanged strings. Ping returns a trimmed string.
 
@@ -58,6 +63,7 @@ client
 |> Email.to(["recipient@example.com"])
 |> Email.subject("Hello")
 |> Email.text("Hello from Elixir")
+|> Email.tags([Lettermint.MessageTag.new!("campaign", "welcome")])
 |> Email.send(idempotency_key: "hello-123")
 ```
 
