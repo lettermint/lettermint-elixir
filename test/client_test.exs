@@ -49,6 +49,29 @@ defmodule Lettermint.ClientTest do
            ]
   end
 
+  test "typed message tags are validated and serialized" do
+    alias Lettermint.{EmailBuilder, MessageTag}
+
+    builder =
+      client()
+      |> EmailBuilder.new()
+      |> EmailBuilder.tags([
+        MessageTag.new!("campaign", "welcome"),
+        %{name: "customer", value: "new"}
+      ])
+
+    assert EmailBuilder.to_map(builder)["tags"] == [
+             %{"name" => "campaign", "value" => "welcome"},
+             %{"name" => "customer", "value" => "new"}
+           ]
+
+    assert_raise ArgumentError, fn -> MessageTag.new!("__LETTERMINT_internal", "value") end
+
+    assert_raise ArgumentError, fn ->
+      EmailBuilder.tags(builder, [MessageTag.new!("same", "one"), MessageTag.new!("same", "two")])
+    end
+  end
+
   test "optional unset and explicit null are distinct" do
     assert Model.to_map(%Models.SendMailRequest{subject: "test", text: nil}) == %{
              "subject" => "test",
