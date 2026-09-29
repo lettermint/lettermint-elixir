@@ -1140,6 +1140,13 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "name": "filter[delivery_mode]",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/DeliveryMode"
+            }
           }
         ],
         "responses": {
@@ -2559,7 +2566,7 @@
                           "prefixItems": [
                             {
                               "type": "string",
-                              "const": "inbound.lettermint.co"
+                              "const": "lettermint.mx"
                             }
                           ],
                           "minItems": 1,
@@ -4552,6 +4559,19 @@
           "created_at": {
             "type": "string",
             "format": "date-time"
+          },
+          "delivery_mode": {
+            "$ref": "#/components/schemas/DeliveryMode"
+          },
+          "sandbox_result": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SandboxResult"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "required": [
@@ -4572,7 +4592,9 @@
           "attachments",
           "metadata",
           "route_id",
-          "created_at"
+          "created_at",
+          "delivery_mode",
+          "sandbox_result"
         ],
         "title": "MessageData"
       },
@@ -4770,6 +4792,19 @@
           },
           "created_at": {
             "type": "string"
+          },
+          "delivery_mode": {
+            "$ref": "#/components/schemas/DeliveryMode"
+          },
+          "sandbox_result": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SandboxResult"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "required": [
@@ -4787,7 +4822,9 @@
           "tag",
           "tags",
           "status_changed_at",
-          "created_at"
+          "created_at",
+          "delivery_mode",
+          "sandbox_result"
         ],
         "title": "MessageListData"
       },
@@ -4802,11 +4839,22 @@
               "string",
               "null"
             ]
+          },
+          "sandbox_result": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SandboxResult"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "required": [
           "email",
-          "name"
+          "name",
+          "sandbox_result"
         ],
         "title": "MessageRecipientData"
       },
@@ -4957,6 +5005,9 @@
           },
           "updated_at": {
             "type": "string"
+          },
+          "delivery_mode": {
+            "$ref": "#/components/schemas/DeliveryMode"
           }
         },
         "required": [
@@ -4969,7 +5020,8 @@
           "token_last_used_at",
           "token_last_used_ip",
           "created_at",
-          "updated_at"
+          "updated_at",
+          "delivery_mode"
         ],
         "title": "ProjectData"
       },
@@ -5118,6 +5170,9 @@
               "string",
               "null"
             ]
+          },
+          "inbound_mx_hostname": {
+            "type": "string"
           },
           "inbound_domain": {
             "type": [
@@ -5723,6 +5778,10 @@
           "short_token": {
             "type": "boolean",
             "default": false
+          },
+          "delivery_mode": {
+            "default": "live",
+            "$ref": "#/components/schemas/DeliveryMode"
           }
         },
         "required": [
@@ -5885,6 +5944,16 @@
               "null"
             ],
             "format": "uuid"
+          },
+          "delivery_mode_filter": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/WebhookDeliveryModeFilter"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "required": [
@@ -6343,6 +6412,16 @@
               "null"
             ],
             "format": "uuid"
+          },
+          "delivery_mode": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/DeliveryMode"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "title": "UpdateProjectData"
@@ -6579,6 +6658,9 @@
               "null"
             ],
             "format": "uuid"
+          },
+          "delivery_mode_filter": {
+            "$ref": "#/components/schemas/WebhookDeliveryModeFilter"
           }
         },
         "title": "UpdateWebhookData"
@@ -6644,6 +6726,9 @@
           "updated_at": {
             "type": "string",
             "format": "date-time"
+          },
+          "delivery_mode_filter": {
+            "$ref": "#/components/schemas/WebhookDeliveryModeFilter"
           }
         },
         "required": [
@@ -6659,7 +6744,8 @@
           "include_machine_events",
           "last_called_at",
           "created_at",
-          "updated_at"
+          "updated_at",
+          "delivery_mode_filter"
         ],
         "title": "WebhookData"
       },
@@ -6749,6 +6835,9 @@
           "timestamp": {
             "type": "string",
             "format": "date-time"
+          },
+          "sandbox": {
+            "type": "boolean"
           }
         },
         "required": [
@@ -6767,7 +6856,8 @@
           "response_headers",
           "error_message",
           "delivered_at",
-          "timestamp"
+          "timestamp",
+          "sandbox"
         ],
         "title": "WebhookDeliveryData"
       },
@@ -7035,6 +7125,9 @@
           "updated_at": {
             "type": "string",
             "format": "date-time"
+          },
+          "delivery_mode_filter": {
+            "$ref": "#/components/schemas/WebhookDeliveryModeFilter"
           }
         },
         "required": [
@@ -7051,9 +7144,44 @@
           "secret",
           "last_called_at",
           "created_at",
-          "updated_at"
+          "updated_at",
+          "delivery_mode_filter"
         ],
         "title": "WebhookSecretData"
+      },
+      "DeliveryMode": {
+        "type": "string",
+        "enum": [
+          "live",
+          "sandbox"
+        ],
+        "title": "DeliveryMode"
+      },
+      "SandboxResult": {
+        "type": "string",
+        "enum": [
+          "delivered",
+          "hard_bounced",
+          "soft_bounced",
+          "deferred",
+          "failed",
+          "suppressed",
+          "spam_complaint",
+          "auto_replied",
+          "opened",
+          "clicked",
+          "unsubscribed"
+        ],
+        "title": "SandboxResult"
+      },
+      "WebhookDeliveryModeFilter": {
+        "type": "string",
+        "enum": [
+          "live",
+          "sandbox",
+          "both"
+        ],
+        "title": "WebhookDeliveryModeFilter"
       }
     },
     "responses": {

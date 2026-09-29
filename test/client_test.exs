@@ -23,6 +23,7 @@ defmodule Lettermint.ClientTest do
         "settings" => %{"tls" => "enforced", "track_opens" => false},
         "tags" => [%{"name" => "order", "value" => "123"}],
         "attachments" => [%{"filename" => "test.txt", "content" => "dGVzdA=="}],
+        "sandbox_result" => "clicked",
         "text" => nil
       }
 
@@ -32,6 +33,49 @@ defmodule Lettermint.ClientTest do
       assert_received {:request, request}
       assert Jason.decode!(request.body) == body
     end
+  end
+
+  test "sandbox contract exposes project, message, send, and webhook fields" do
+    assert Models.DeliveryMode.values() == ["live", "sandbox"]
+    assert "hard_bounced" in Models.SandboxResult.values()
+    assert Models.WebhookDeliveryModeFilter.values() == ["live", "sandbox", "both"]
+
+    project = Model.from_map(Models.ProjectData, %{"delivery_mode" => "sandbox"})
+
+    message =
+      Model.from_map(Models.MessageData, %{
+        "delivery_mode" => "sandbox",
+        "sandbox_result" => "hard_bounced"
+      })
+
+    delivery = Model.from_map(Models.WebhookDeliveryData, %{"sandbox" => true})
+
+    send_response =
+      Model.from_map(Models.SendEmailResponse, %{
+        "message_id" => nil,
+        "status" => "delivered",
+        "sandbox" => true,
+        "sandbox_result" => "clicked"
+      })
+
+    recipient =
+      Model.from_map(Models.MessageRecipientData, %{
+        "email" => "user@example.com",
+        "name" => nil,
+        "sandbox_result" => "clicked"
+      })
+
+    webhook = %Models.StoreWebhookData{delivery_mode_filter: "both"}
+
+    assert project.delivery_mode == "sandbox"
+    assert message.delivery_mode == "sandbox"
+    assert message.sandbox_result == "hard_bounced"
+    assert delivery.sandbox
+    assert send_response.sandbox
+    assert send_response.sandbox_result == "clicked"
+    assert recipient.sandbox_result == "clicked"
+    refute Map.has_key?(Model.to_map(send_response), "delivery_mode")
+    assert Model.to_map(webhook)["delivery_mode_filter"] == "both"
   end
 
   test "batch request is a bare array" do

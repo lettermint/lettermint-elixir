@@ -30,6 +30,12 @@ defmodule Lettermint.Models.CancelScheduledMessageResponse do
     ]
 end
 
+defmodule Lettermint.Models.DeliveryMode do
+  @moduledoc "API enum values. Unknown response values remain strings."
+  @type t :: String.t()
+  def values, do: ["live", "sandbox"]
+end
+
 defmodule Lettermint.Models.DkimMode do
   @moduledoc "API enum values. Unknown response values remain strings."
   @type t :: String.t()
@@ -326,6 +332,8 @@ defmodule Lettermint.Models.MessageData do
             spam_symbols: :unset,
             route_id: :unset,
             created_at: :unset,
+            delivery_mode: :unset,
+            sandbox_result: :unset,
             extra: %{}
 
   @type t :: %__MODULE__{
@@ -349,6 +357,8 @@ defmodule Lettermint.Models.MessageData do
           spam_symbols: [Lettermint.Models.SpamSymbol.t()] | nil | :unset,
           route_id: String.t() | nil | :unset,
           created_at: String.t() | nil | :unset,
+          delivery_mode: String.t() | nil | :unset,
+          sandbox_result: String.t() | nil | :unset,
           extra: map()
         }
   def __schema__,
@@ -372,7 +382,9 @@ defmodule Lettermint.Models.MessageData do
       {"spam_score", :spam_score, :number},
       {"spam_symbols", :spam_symbols, {:list, {:model, Lettermint.Models.SpamSymbol}}},
       {"route_id", :route_id, :string},
-      {"created_at", :created_at, :string}
+      {"created_at", :created_at, :string},
+      {"delivery_mode", :delivery_mode, :string},
+      {"sandbox_result", :sandbox_result, :string}
     ]
 end
 
@@ -546,6 +558,8 @@ defmodule Lettermint.Models.MessageListData do
             tags: :unset,
             status_changed_at: :unset,
             created_at: :unset,
+            delivery_mode: :unset,
+            sandbox_result: :unset,
             extra: %{}
 
   @type t :: %__MODULE__{
@@ -565,6 +579,8 @@ defmodule Lettermint.Models.MessageListData do
           tags: [Lettermint.Models.MessageListDataTagsItem.t()] | nil | :unset,
           status_changed_at: String.t() | nil | :unset,
           created_at: String.t() | nil | :unset,
+          delivery_mode: String.t() | nil | :unset,
+          sandbox_result: String.t() | nil | :unset,
           extra: map()
         }
   def __schema__,
@@ -584,7 +600,9 @@ defmodule Lettermint.Models.MessageListData do
       {"tag", :tag, :string},
       {"tags", :tags, {:list, {:model, Lettermint.Models.MessageListDataTagsItem}}},
       {"status_changed_at", :status_changed_at, :string},
-      {"created_at", :created_at, :string}
+      {"created_at", :created_at, :string},
+      {"delivery_mode", :delivery_mode, :string},
+      {"sandbox_result", :sandbox_result, :string}
     ]
 end
 
@@ -602,14 +620,20 @@ end
 
 defmodule Lettermint.Models.MessageRecipientData do
   @moduledoc "Generated API model. `:unset` fields are omitted from requests."
-  defstruct email: :unset, name: :unset, extra: %{}
+  defstruct email: :unset, name: :unset, sandbox_result: :unset, extra: %{}
 
   @type t :: %__MODULE__{
           email: String.t() | nil | :unset,
           name: String.t() | nil | :unset,
+          sandbox_result: String.t() | nil | :unset,
           extra: map()
         }
-  def __schema__, do: [{"email", :email, :string}, {"name", :name, :string}]
+  def __schema__,
+    do: [
+      {"email", :email, :string},
+      {"name", :name, :string},
+      {"sandbox_result", :sandbox_result, :string}
+    ]
 end
 
 defmodule Lettermint.Models.MessageStatsData do
@@ -726,6 +750,7 @@ defmodule Lettermint.Models.ProjectData do
             last_28_days: :unset,
             created_at: :unset,
             updated_at: :unset,
+            delivery_mode: :unset,
             extra: %{}
 
   @type t :: %__MODULE__{
@@ -744,6 +769,7 @@ defmodule Lettermint.Models.ProjectData do
           last_28_days: Lettermint.Models.MessageStatsData.t() | nil | :unset,
           created_at: String.t() | nil | :unset,
           updated_at: String.t() | nil | :unset,
+          delivery_mode: String.t() | nil | :unset,
           extra: map()
         }
   def __schema__,
@@ -762,7 +788,8 @@ defmodule Lettermint.Models.ProjectData do
       {"domains_count", :domains_count, :integer},
       {"last_28_days", :last_28_days, {:model, Lettermint.Models.MessageStatsData}},
       {"created_at", :created_at, :string},
-      {"updated_at", :updated_at, :string}
+      {"updated_at", :updated_at, :string},
+      {"delivery_mode", :delivery_mode, :string}
     ]
 end
 
@@ -992,6 +1019,7 @@ defmodule Lettermint.Models.RouteData do
             route_type: :unset,
             is_default: :unset,
             inbound_address: :unset,
+            inbound_mx_hostname: :unset,
             inbound_domain: :unset,
             inbound_domain_verified_at: :unset,
             inbound_spam_threshold: :unset,
@@ -1013,6 +1041,7 @@ defmodule Lettermint.Models.RouteData do
           route_type: String.t() | nil | :unset,
           is_default: boolean() | nil | :unset,
           inbound_address: String.t() | nil | :unset,
+          inbound_mx_hostname: String.t() | nil | :unset,
           inbound_domain: String.t() | nil | :unset,
           inbound_domain_verified_at: String.t() | nil | :unset,
           inbound_spam_threshold: number() | nil | :unset,
@@ -1035,6 +1064,7 @@ defmodule Lettermint.Models.RouteData do
       {"route_type", :route_type, :string},
       {"is_default", :is_default, :boolean},
       {"inbound_address", :inbound_address, :string},
+      {"inbound_mx_hostname", :inbound_mx_hostname, :string},
       {"inbound_domain", :inbound_domain, :string},
       {"inbound_domain_verified_at", :inbound_domain_verified_at, :string},
       {"inbound_spam_threshold", :inbound_spam_threshold, :number},
@@ -1277,21 +1307,49 @@ defmodule Lettermint.Models.RouteVerifyInboundDomainResponseData do
   def __schema__, do: [{"verified", :verified, :boolean}, {"message", :message, :string}]
 end
 
+defmodule Lettermint.Models.SandboxResult do
+  @moduledoc "API enum values. Unknown response values remain strings."
+  @type t :: String.t()
+  def values,
+    do: [
+      "delivered",
+      "hard_bounced",
+      "soft_bounced",
+      "deferred",
+      "failed",
+      "suppressed",
+      "spam_complaint",
+      "auto_replied",
+      "opened",
+      "clicked",
+      "unsubscribed"
+    ]
+end
+
 defmodule Lettermint.Models.SendBatchEmailResponseItem do
   @moduledoc "Generated API model. `:unset` fields are omitted from requests."
-  defstruct message_id: :unset, status: :unset, scheduled_at: :unset, extra: %{}
+  defstruct message_id: :unset,
+            status: :unset,
+            scheduled_at: :unset,
+            sandbox: :unset,
+            sandbox_result: :unset,
+            extra: %{}
 
   @type t :: %__MODULE__{
           message_id: String.t() | nil | :unset,
           status: String.t() | nil | :unset,
           scheduled_at: String.t() | nil | :unset,
+          sandbox: boolean() | nil | :unset,
+          sandbox_result: String.t() | nil | :unset,
           extra: map()
         }
   def __schema__,
     do: [
       {"message_id", :message_id, :string},
       {"status", :status, :string},
-      {"scheduled_at", :scheduled_at, :string}
+      {"scheduled_at", :scheduled_at, :string},
+      {"sandbox", :sandbox, :boolean},
+      {"sandbox_result", :sandbox_result, :string}
     ]
 end
 
@@ -1313,6 +1371,7 @@ defmodule Lettermint.Models.SendBatchMailRequestItem do
             html: :unset,
             text: :unset,
             attachments: :unset,
+            sandbox_result: :unset,
             extra: %{}
 
   @type t :: %__MODULE__{
@@ -1333,6 +1392,7 @@ defmodule Lettermint.Models.SendBatchMailRequestItem do
           text: String.t() | nil | :unset,
           attachments:
             [Lettermint.Models.SendBatchMailRequestItemAttachmentsItem.t()] | nil | :unset,
+          sandbox_result: String.t() | nil | :unset,
           extra: map()
         }
   def __schema__,
@@ -1353,7 +1413,8 @@ defmodule Lettermint.Models.SendBatchMailRequestItem do
       {"html", :html, :string},
       {"text", :text, :string},
       {"attachments", :attachments,
-       {:list, {:model, Lettermint.Models.SendBatchMailRequestItemAttachmentsItem}}}
+       {:list, {:model, Lettermint.Models.SendBatchMailRequestItemAttachmentsItem}}},
+      {"sandbox_result", :sandbox_result, :string}
     ]
 end
 
@@ -1413,19 +1474,28 @@ end
 
 defmodule Lettermint.Models.SendEmailResponse do
   @moduledoc "Generated API model. `:unset` fields are omitted from requests."
-  defstruct message_id: :unset, status: :unset, scheduled_at: :unset, extra: %{}
+  defstruct message_id: :unset,
+            status: :unset,
+            scheduled_at: :unset,
+            sandbox: :unset,
+            sandbox_result: :unset,
+            extra: %{}
 
   @type t :: %__MODULE__{
           message_id: String.t() | nil | :unset,
           status: String.t() | nil | :unset,
           scheduled_at: String.t() | nil | :unset,
+          sandbox: boolean() | nil | :unset,
+          sandbox_result: String.t() | nil | :unset,
           extra: map()
         }
   def __schema__,
     do: [
       {"message_id", :message_id, :string},
       {"status", :status, :string},
-      {"scheduled_at", :scheduled_at, :string}
+      {"scheduled_at", :scheduled_at, :string},
+      {"sandbox", :sandbox, :boolean},
+      {"sandbox_result", :sandbox_result, :string}
     ]
 end
 
@@ -1447,6 +1517,7 @@ defmodule Lettermint.Models.SendMailRequest do
             html: :unset,
             text: :unset,
             attachments: :unset,
+            sandbox_result: :unset,
             extra: %{}
 
   @type t :: %__MODULE__{
@@ -1466,6 +1537,7 @@ defmodule Lettermint.Models.SendMailRequest do
           html: String.t() | nil | :unset,
           text: String.t() | nil | :unset,
           attachments: [Lettermint.Models.SendMailRequestAttachmentsItem.t()] | nil | :unset,
+          sandbox_result: String.t() | nil | :unset,
           extra: map()
         }
   def __schema__,
@@ -1486,7 +1558,8 @@ defmodule Lettermint.Models.SendMailRequest do
       {"html", :html, :string},
       {"text", :text, :string},
       {"attachments", :attachments,
-       {:list, {:model, Lettermint.Models.SendMailRequestAttachmentsItem}}}
+       {:list, {:model, Lettermint.Models.SendMailRequestAttachmentsItem}}},
+      {"sandbox_result", :sandbox_result, :string}
     ]
 end
 
@@ -1759,6 +1832,7 @@ defmodule Lettermint.Models.StoreProjectData do
             smtp_enabled: :unset,
             initial_routes: :unset,
             short_token: :unset,
+            delivery_mode: :unset,
             extra: %{}
 
   @type t :: %__MODULE__{
@@ -1766,6 +1840,7 @@ defmodule Lettermint.Models.StoreProjectData do
           smtp_enabled: boolean() | nil | :unset,
           initial_routes: String.t() | nil | :unset,
           short_token: boolean() | nil | :unset,
+          delivery_mode: String.t() | nil | :unset,
           extra: map()
         }
   def __schema__,
@@ -1773,7 +1848,8 @@ defmodule Lettermint.Models.StoreProjectData do
       {"name", :name, :string},
       {"smtp_enabled", :smtp_enabled, :boolean},
       {"initial_routes", :initial_routes, :string},
-      {"short_token", :short_token, :boolean}
+      {"short_token", :short_token, :boolean},
+      {"delivery_mode", :delivery_mode, :string}
     ]
 end
 
@@ -1835,6 +1911,7 @@ defmodule Lettermint.Models.StoreWebhookData do
             project_ids: :unset,
             route_ids: :unset,
             route_id: :unset,
+            delivery_mode_filter: :unset,
             extra: %{}
 
   @type t :: %__MODULE__{
@@ -1847,6 +1924,7 @@ defmodule Lettermint.Models.StoreWebhookData do
           project_ids: [String.t()] | nil | :unset,
           route_ids: [String.t()] | nil | :unset,
           route_id: String.t() | nil | :unset,
+          delivery_mode_filter: String.t() | nil | :unset,
           extra: map()
         }
   def __schema__,
@@ -1859,7 +1937,8 @@ defmodule Lettermint.Models.StoreWebhookData do
       {"scope", :scope, :string},
       {"project_ids", :project_ids, {:list, :string}},
       {"route_ids", :route_ids, {:list, :string}},
-      {"route_id", :route_id, :string}
+      {"route_id", :route_id, :string},
+      {"delivery_mode_filter", :delivery_mode_filter, :string}
     ]
 end
 
@@ -2327,6 +2406,7 @@ defmodule Lettermint.Models.UpdateProjectData do
             smtp_enabled: :unset,
             redact_email_content: :unset,
             default_route_id: :unset,
+            delivery_mode: :unset,
             extra: %{}
 
   @type t :: %__MODULE__{
@@ -2334,6 +2414,7 @@ defmodule Lettermint.Models.UpdateProjectData do
           smtp_enabled: boolean() | nil | :unset,
           redact_email_content: boolean() | nil | :unset,
           default_route_id: String.t() | nil | :unset,
+          delivery_mode: String.t() | nil | :unset,
           extra: map()
         }
   def __schema__,
@@ -2341,7 +2422,8 @@ defmodule Lettermint.Models.UpdateProjectData do
       {"name", :name, :string},
       {"smtp_enabled", :smtp_enabled, :boolean},
       {"redact_email_content", :redact_email_content, :boolean},
-      {"default_route_id", :default_route_id, :string}
+      {"default_route_id", :default_route_id, :string},
+      {"delivery_mode", :delivery_mode, :string}
     ]
 end
 
@@ -2470,6 +2552,7 @@ defmodule Lettermint.Models.UpdateWebhookData do
             project_ids: :unset,
             route_ids: :unset,
             route_id: :unset,
+            delivery_mode_filter: :unset,
             extra: %{}
 
   @type t :: %__MODULE__{
@@ -2482,6 +2565,7 @@ defmodule Lettermint.Models.UpdateWebhookData do
           project_ids: [String.t()] | nil | :unset,
           route_ids: [String.t()] | nil | :unset,
           route_id: String.t() | nil | :unset,
+          delivery_mode_filter: String.t() | nil | :unset,
           extra: map()
         }
   def __schema__,
@@ -2494,7 +2578,8 @@ defmodule Lettermint.Models.UpdateWebhookData do
       {"scope", :scope, :string},
       {"project_ids", :project_ids, {:list, :string}},
       {"route_ids", :route_ids, {:list, :string}},
-      {"route_id", :route_id, :string}
+      {"route_id", :route_id, :string},
+      {"delivery_mode_filter", :delivery_mode_filter, :string}
     ]
 end
 
@@ -2529,6 +2614,7 @@ defmodule Lettermint.Models.WebhookData do
             last_called_at: :unset,
             created_at: :unset,
             updated_at: :unset,
+            delivery_mode_filter: :unset,
             extra: %{}
 
   @type t :: %__MODULE__{
@@ -2545,6 +2631,7 @@ defmodule Lettermint.Models.WebhookData do
           last_called_at: String.t() | nil | :unset,
           created_at: String.t() | nil | :unset,
           updated_at: String.t() | nil | :unset,
+          delivery_mode_filter: String.t() | nil | :unset,
           extra: map()
         }
   def __schema__,
@@ -2561,7 +2648,8 @@ defmodule Lettermint.Models.WebhookData do
       {"include_machine_events", :include_machine_events, :boolean},
       {"last_called_at", :last_called_at, :string},
       {"created_at", :created_at, :string},
-      {"updated_at", :updated_at, :string}
+      {"updated_at", :updated_at, :string},
+      {"delivery_mode_filter", :delivery_mode_filter, :string}
     ]
 end
 
@@ -2616,6 +2704,7 @@ defmodule Lettermint.Models.WebhookDeliveryData do
             error_message: :unset,
             delivered_at: :unset,
             timestamp: :unset,
+            sandbox: :unset,
             extra: %{}
 
   @type t :: %__MODULE__{
@@ -2635,6 +2724,7 @@ defmodule Lettermint.Models.WebhookDeliveryData do
           error_message: String.t() | nil | :unset,
           delivered_at: String.t() | nil | :unset,
           timestamp: String.t() | nil | :unset,
+          sandbox: boolean() | nil | :unset,
           extra: map()
         }
   def __schema__,
@@ -2654,7 +2744,8 @@ defmodule Lettermint.Models.WebhookDeliveryData do
       {"response_headers", :response_headers, {:list, :string}},
       {"error_message", :error_message, :string},
       {"delivered_at", :delivered_at, :string},
-      {"timestamp", :timestamp, :string}
+      {"timestamp", :timestamp, :string},
+      {"sandbox", :sandbox, :boolean}
     ]
 end
 
@@ -2704,6 +2795,12 @@ defmodule Lettermint.Models.WebhookDeliveryListData do
       {"delivered_at", :delivered_at, :string},
       {"created_at", :created_at, :string}
     ]
+end
+
+defmodule Lettermint.Models.WebhookDeliveryModeFilter do
+  @moduledoc "API enum values. Unknown response values remain strings."
+  @type t :: String.t()
+  def values, do: ["live", "sandbox", "both"]
 end
 
 defmodule Lettermint.Models.WebhookDeliveryStatus do
@@ -2867,6 +2964,7 @@ defmodule Lettermint.Models.WebhookSecretData do
             last_called_at: :unset,
             created_at: :unset,
             updated_at: :unset,
+            delivery_mode_filter: :unset,
             extra: %{}
 
   @type t :: %__MODULE__{
@@ -2884,6 +2982,7 @@ defmodule Lettermint.Models.WebhookSecretData do
           last_called_at: String.t() | nil | :unset,
           created_at: String.t() | nil | :unset,
           updated_at: String.t() | nil | :unset,
+          delivery_mode_filter: String.t() | nil | :unset,
           extra: map()
         }
   def __schema__,
@@ -2901,7 +3000,8 @@ defmodule Lettermint.Models.WebhookSecretData do
       {"secret", :secret, :string},
       {"last_called_at", :last_called_at, :string},
       {"created_at", :created_at, :string},
-      {"updated_at", :updated_at, :string}
+      {"updated_at", :updated_at, :string},
+      {"delivery_mode_filter", :delivery_mode_filter, :string}
     ]
 end
 

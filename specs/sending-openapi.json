@@ -82,6 +82,13 @@
                         },
                         "scheduled_at": {
                           "type": "string"
+                        },
+                        "sandbox": {
+                          "type": "boolean",
+                          "const": true
+                        },
+                        "sandbox_result": {
+                          "$ref": "#/components/schemas/SandboxResult"
                         }
                       },
                       "required": [
@@ -101,6 +108,13 @@
                         },
                         "status": {
                           "$ref": "#/components/schemas/MessageStatus"
+                        },
+                        "sandbox": {
+                          "type": "boolean",
+                          "const": true
+                        },
+                        "sandbox_result": {
+                          "$ref": "#/components/schemas/SandboxResult"
                         }
                       },
                       "required": [
@@ -183,6 +197,13 @@
                       },
                       "scheduled_at": {
                         "type": "string"
+                      },
+                      "sandbox": {
+                        "type": "boolean",
+                        "const": true
+                      },
+                      "sandbox_result": {
+                        "$ref": "#/components/schemas/SandboxResult"
                       }
                     },
                     "required": [
@@ -480,6 +501,9 @@
                 "content"
               ]
             }
+          },
+          "sandbox_result": {
+            "$ref": "#/components/schemas/SandboxResult"
           }
         },
         "required": [
@@ -688,6 +712,9 @@
                   "content"
                 ]
               }
+            },
+            "sandbox_result": {
+              "$ref": "#/components/schemas/SandboxResult"
             }
           },
           "required": [
@@ -706,6 +733,23 @@
           "enforced"
         ],
         "title": "TlsPolicy"
+      },
+      "SandboxResult": {
+        "type": "string",
+        "enum": [
+          "delivered",
+          "hard_bounced",
+          "soft_bounced",
+          "deferred",
+          "failed",
+          "suppressed",
+          "spam_complaint",
+          "auto_replied",
+          "opened",
+          "clicked",
+          "unsubscribed"
+        ],
+        "title": "SandboxResult"
       }
     },
     "responses": {
