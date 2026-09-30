@@ -466,6 +466,7 @@
             "custom_role_requires_pro"
         ],
         "RbacPermission": [
+            "analytics:read",
             "team:manage",
             "billing:manage",
             "security:manage",
@@ -583,6 +584,12 @@
         ]
     },
     "routes": [
+        { "method": "POST", "path": "/analytics" },
+        { "method": "GET", "path": "/projects/{projectId}/report-forwarding" },
+        { "method": "PUT", "path": "/projects/{projectId}/report-forwarding" },
+        { "method": "DELETE", "path": "/projects/{projectId}/report-forwarding" },
+        { "method": "POST", "path": "/projects/{projectId}/report-forwarding/verify" },
+        { "method": "POST", "path": "/projects/{projectId}/report-forwarding/resend-code" },
         {
             "method": "POST",
             "path": "/send/batch"

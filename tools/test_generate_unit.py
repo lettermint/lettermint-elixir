@@ -8,6 +8,17 @@ from generate import Generator, ROOT
 
 
 class GeneratorTests(unittest.TestCase):
+    def test_report_forwarding_mapping_and_project_response_compatibility(self):
+        base = {'components': {'schemas': {'ProjectCreatedData': {'type': 'object', 'properties': {'api_token': {'type': 'string'}}}}}, 'paths': {}}
+        mappings = {'getReportForwarding': 'retrieve_report_forwarding', 'updateReportForwarding': 'update_report_forwarding', 'deleteReportForwarding': 'delete_report_forwarding', 'verifyReportForwarding': 'verify_report_forwarding', 'resendReportForwardingCode': 'resend_report_forwarding_code', 'project.store': 'create'}
+        for operation, method in mappings.items():
+            base['paths'] = {'/projects/{projectId}/report-forwarding': {'get': {'operationId': operation, 'parameters': [{'in': 'path', 'name': 'projectId'}], 'responses': {'200': {'content': {'application/json': {'schema': {'$ref': '#/components/schemas/ProjectCreatedData'}}}}}}}}
+            files = Generator({'example': base}).generate()
+            self.assertIn('def ' + method + '(', files['lib/lettermint/generated.ex'])
+            self.assertIn('defmodule Lettermint.Projects', files['lib/lettermint/generated.ex'])
+            if operation == 'project.store':
+                self.assertIn('defmodule Lettermint.Models.ProjectStoreResponse', files['lib/lettermint/generated.ex'])
+
     def setUp(self):
         self.specs = {'example': {
             'components': {'schemas': {'Status': {'type': 'string', 'enum': ['hard_bounced']}}},
