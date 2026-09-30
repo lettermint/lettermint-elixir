@@ -11,6 +11,7 @@ defmodule Lettermint.MixProject do
       start_permanent: Mix.env() == :prod,
       deps: [
         {:req, "~> 0.7.4"},
+        {:mint, "~> 1.10.2"},
         {:jason, "~> 1.4"},
         {:ex_doc, "~> 0.39", only: :dev, runtime: false}
       ],
