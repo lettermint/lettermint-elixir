@@ -59,7 +59,7 @@ function syntheticData(string $class, int $depth = 0): object
     return $reflection->newInstanceArgs($arguments);
 }
 
-$spec = json_decode(file_get_contents(__DIR__.'/../specs/team-openapi.json'), true, flags: JSON_THROW_ON_ERROR);
+$spec = json_decode(file_get_contents($root.'/../docs/api-reference/team-openapi.json'), true, flags: JSON_THROW_ON_ERROR);
 $fixtures = ['models' => [], 'enums' => [], 'routes' => []];
 foreach ($app['router']->getRoutes() as $route) {
     if (! str_starts_with($route->getActionName(), 'App\\Http\\Controllers\\Api\\V1\\')) {

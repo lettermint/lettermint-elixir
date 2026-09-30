@@ -1,13 +1,15 @@
 import copy
 import json
+import os
 import unittest
 from pathlib import Path
 from generate import Generator
 ROOT = Path(__file__).resolve().parents[1]
 
-class GeneratorTests(unittest.TestCase):
+@unittest.skipUnless(os.environ.get('LETTERMINT_SPEC_DIR'), 'Set LETTERMINT_SPEC_DIR for external contract checks')
+class ExternalContractTests(unittest.TestCase):
     def setUp(self):
-        self.specs = {k: json.loads((ROOT/'specs'/f'{k}-openapi.json').read_text()) for k in ['sending', 'team']}
+        self.specs = {k: json.loads((Path(os.environ['LETTERMINT_SPEC_DIR'])/f'{k}-openapi.json').read_text()) for k in ['sending', 'team']}
 
     def test_deterministic_without_input_mutation(self):
         before = copy.deepcopy(self.specs)

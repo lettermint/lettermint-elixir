@@ -144,7 +144,7 @@ def snake(value):
 def main():
     parser=argparse.ArgumentParser()
     parser.add_argument('--check',action='store_true')
-    parser.add_argument('--spec-dir',type=Path,default=ROOT/'specs')
+    parser.add_argument('--spec-dir',type=Path,required=True,help='External directory with sending-openapi.json and team-openapi.json')
     args=parser.parse_args()
     specs={k:json.loads((args.spec_dir/(k+'-openapi.json')).read_text()) for k in ['sending','team']}
     for relative, content in Generator(specs).generate().items():
