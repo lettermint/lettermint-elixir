@@ -16,6 +16,10 @@ class ExternalContractTests(unittest.TestCase):
         self.assertEqual(Generator(self.specs).generate(), Generator(self.specs).generate())
         self.assertEqual(before, self.specs)
 
+    def test_generated_files_are_current(self):
+        for path, content in Generator(self.specs).generate().items():
+            self.assertEqual((ROOT / path).read_text(), content, path)
+
     def test_independent_spec_inputs(self):
         for surface, spec in self.specs.items():
             files = Generator({surface: spec}).generate()
