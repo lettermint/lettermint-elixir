@@ -11,6 +11,7 @@
             "events": [],
             "enabled": true,
             "include_machine_events": true,
+            "delivery_mode_filter": "live",
             "secret": "fixture-value",
             "last_called_at": "2026-09-07T12:00:00+00:00",
             "created_at": "2026-09-07T12:00:00+00:00",
@@ -27,6 +28,7 @@
             "events": [],
             "enabled": true,
             "include_machine_events": true,
+            "delivery_mode_filter": "live",
             "last_called_at": "2026-09-07T12:00:00+00:00",
             "created_at": "2026-09-07T12:00:00+00:00",
             "updated_at": "2026-09-07T12:00:00+00:00"
@@ -41,6 +43,7 @@
             "url": "fixture-value",
             "events": [],
             "enabled": true,
+            "delivery_mode_filter": "live",
             "last_called_at": "2026-09-07T12:00:00+00:00",
             "created_at": "2026-09-07T12:00:00+00:00",
             "updated_at": "2026-09-07T12:00:00+00:00"
@@ -53,6 +56,7 @@
             "source_project_id": "fixture-value",
             "source_route_id": "fixture-value",
             "status": "pending",
+            "sandbox": true,
             "attempt_number": 1,
             "http_status_code": 1,
             "duration_ms": 1,
@@ -71,6 +75,7 @@
             "source_project_id": "fixture-value",
             "source_route_id": "fixture-value",
             "status": "pending",
+            "sandbox": true,
             "attempt_number": 1,
             "http_status_code": 1,
             "duration_ms": 1,
@@ -115,6 +120,8 @@
             "id": "fixture-value",
             "type": "inbound",
             "status": "scheduled",
+            "delivery_mode": "live",
+            "sandbox_result": "delivered",
             "status_changed_at": "2026-09-07T12:00:00+00:00",
             "scheduled_at": "2026-09-07T12:00:00+00:00",
             "tag": "fixture-value",
@@ -133,12 +140,15 @@
         },
         "MessageRecipientData": {
             "email": "fixture-value",
-            "name": "fixture-value"
+            "name": "fixture-value",
+            "sandbox_result": null
         },
         "MessageListData": {
             "id": "fixture-value",
             "type": "inbound",
             "status": "scheduled",
+            "delivery_mode": "live",
+            "sandbox_result": "delivered",
             "scheduled_at": "2026-09-07T12:00:00+00:00",
             "from_email": "fixture-value",
             "from_name": "fixture-value",
@@ -172,9 +182,26 @@
             "messages_inbound": 1,
             "deliverability": 1.25
         },
+        "ProjectCreatedData": {
+            "data": {
+                "id": "fixture-value",
+                "name": "fixture-value",
+                "delivery_mode": "live",
+                "smtp_enabled": true,
+                "redact_email_content": true,
+                "default_route_id": "fixture-value",
+                "token_generated_at": "2026-09-07T12:00:00+00:00",
+                "token_last_used_at": "2026-09-07T12:00:00+00:00",
+                "token_last_used_ip": "fixture-value",
+                "created_at": "fixture-value",
+                "updated_at": "fixture-value"
+            },
+            "message": "fixture-value"
+        },
         "ProjectListData": {
             "id": "fixture-value",
             "name": "fixture-value",
+            "delivery_mode": "live",
             "smtp_enabled": true,
             "routes_count": 1,
             "domains_count": 1,
@@ -190,6 +217,7 @@
         "ProjectData": {
             "id": "fixture-value",
             "name": "fixture-value",
+            "delivery_mode": "live",
             "smtp_enabled": true,
             "redact_email_content": true,
             "default_route_id": "fixture-value",
@@ -354,6 +382,11 @@
                 "machine_clicked": null
             },
             "daily": []
+        },
+        "AnalyticsResponseData": {
+            "data": [],
+            "meta": [],
+            "pagination": []
         }
     },
     "enums": {
@@ -365,6 +398,10 @@
             "owner",
             "admin",
             "member"
+        ],
+        "DeliveryMode": [
+            "live",
+            "sandbox"
         ],
         "DkimMode": [
             "legacy_txt",
@@ -466,7 +503,6 @@
             "custom_role_requires_pro"
         ],
         "RbacPermission": [
-            "analytics:read",
             "team:manage",
             "billing:manage",
             "security:manage",
@@ -501,6 +537,7 @@
             "webhooks:delete",
             "webhooks:rotate_secret",
             "stats:read",
+            "analytics:read",
             "messages:read",
             "messages:read_content",
             "messages:send",
@@ -517,6 +554,19 @@
             "transactional",
             "broadcast",
             "inbound"
+        ],
+        "SandboxResult": [
+            "delivered",
+            "hard_bounced",
+            "soft_bounced",
+            "deferred",
+            "failed",
+            "suppressed",
+            "spam_complaint",
+            "auto_replied",
+            "opened",
+            "clicked",
+            "unsubscribed"
         ],
         "SuppressionAppliesTo": [
             "all",
@@ -545,6 +595,11 @@
         "TlsPolicy": [
             "opportunistic",
             "enforced"
+        ],
+        "WebhookDeliveryModeFilter": [
+            "live",
+            "sandbox",
+            "both"
         ],
         "WebhookDeliveryStatus": [
             "pending",
@@ -584,12 +639,6 @@
         ]
     },
     "routes": [
-        { "method": "POST", "path": "/analytics" },
-        { "method": "GET", "path": "/projects/{projectId}/report-forwarding" },
-        { "method": "PUT", "path": "/projects/{projectId}/report-forwarding" },
-        { "method": "DELETE", "path": "/projects/{projectId}/report-forwarding" },
-        { "method": "POST", "path": "/projects/{projectId}/report-forwarding/verify" },
-        { "method": "POST", "path": "/projects/{projectId}/report-forwarding/resend-code" },
         {
             "method": "POST",
             "path": "/send/batch"
@@ -669,6 +718,26 @@
         {
             "method": "PUT",
             "path": "/domains/{domainId}/projects"
+        },
+        {
+            "method": "GET",
+            "path": "/projects/{projectId}/report-forwarding"
+        },
+        {
+            "method": "PUT",
+            "path": "/projects/{projectId}/report-forwarding"
+        },
+        {
+            "method": "DELETE",
+            "path": "/projects/{projectId}/report-forwarding"
+        },
+        {
+            "method": "POST",
+            "path": "/projects/{projectId}/report-forwarding/verify"
+        },
+        {
+            "method": "POST",
+            "path": "/projects/{projectId}/report-forwarding/resend-code"
         },
         {
             "method": "GET",
@@ -795,6 +864,10 @@
             "path": "/suppressions/{suppressionId}"
         },
         {
+            "method": "POST",
+            "path": "/analytics"
+        },
+        {
             "method": "GET",
             "path": "/stats"
         }
@@ -806,6 +879,8 @@
                     "id": "fixture-value",
                     "type": "inbound",
                     "status": "scheduled",
+                    "delivery_mode": "live",
+                    "sandbox_result": "delivered",
                     "scheduled_at": "2026-09-07T12:00:00+00:00",
                     "from_email": "fixture-value",
                     "from_name": "fixture-value",
@@ -868,6 +943,7 @@
                 {
                     "id": "fixture-value",
                     "name": "fixture-value",
+                    "delivery_mode": "live",
                     "smtp_enabled": true,
                     "routes_count": 1,
                     "domains_count": 1,
@@ -942,6 +1018,7 @@
                     "url": "fixture-value",
                     "events": [],
                     "enabled": true,
+                    "delivery_mode_filter": "live",
                     "last_called_at": "2026-09-07T12:00:00+00:00",
                     "created_at": "2026-09-07T12:00:00+00:00",
                     "updated_at": "2026-09-07T12:00:00+00:00"
@@ -964,6 +1041,7 @@
                     "source_project_id": "fixture-value",
                     "source_route_id": "fixture-value",
                     "status": "pending",
+                    "sandbox": true,
                     "attempt_number": 1,
                     "http_status_code": 1,
                     "duration_ms": 1,
@@ -1031,7 +1109,8 @@
     },
     "webhook_signature": {
         "signature": "t=1788782400,v1=ad71837b0bfd7c1c78a5cbe0ad9fbddb3c7acea75ac7ca3b966e66a76fc127c2",
-        "body": "{\"url\":\"https://example.com/path\",\"name\":\"Café\"}"
+        "body": "{\"url\":\"https://example.com/path\",\"name\":\"Café\"}",
+        "timestamp": 1788782400
     },
     "request_rules": {
         "single": [
@@ -1047,6 +1126,7 @@
             "reply_to.*",
             "subject",
             "scheduled_at",
+            "sandbox_result",
             "headers",
             "headers.*",
             "metadata",
@@ -1083,6 +1163,7 @@
             "*.reply_to.*",
             "*.subject",
             "*.scheduled_at",
+            "*.sandbox_result",
             "*.headers",
             "*.headers.*",
             "*.metadata",
