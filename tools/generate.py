@@ -27,14 +27,17 @@ class Generator:
             settings = self.specs['team']['components']['schemas'].get('RouteData', {}).get('properties', {}).get('settings', {})
             if 'attachment_delivery' in settings.get('properties', {}):
                 settings['properties']['attachment_delivery'] = {'$ref': '#/components/schemas/AttachmentDelivery'}
-        # MessageController returns a Laravel CursorPaginator through Data::collect.
-        # Scramble's CursorPaginatedDataCollection annotation describes a different envelope.
+        # Keep the legacy flat cursor fields and the current envelope metadata.
         if 'team' in self.specs:
             team = self.specs['team']
             page_template = team['paths']['/domains']['get']['responses']['200']['content']['application/json']['schema']
             for path, model in [('/messages', 'MessageListData'), ('/messages/{messageId}/events', 'MessageEventData')]:
                 page = copy.deepcopy(page_template)
                 page['properties']['data']['items'] = {'$ref': '#/components/schemas/' + model}
+                current = team['paths'][path]['get']['responses']['200']['content']['application/json']['schema']
+                for field in ['links', 'meta']:
+                    if field in current.get('properties', {}):
+                        page['properties'][field] = copy.deepcopy(current['properties'][field])
                 team['paths'][path]['get']['responses']['200']['content']['application/json']['schema'] = page
         specs = self.specs
         self.schemas = {}
@@ -107,7 +110,16 @@ class Generator:
                 for verb, op in item.items():
                     if verb not in ['get','post','put','patch','delete']: continue
                     operation = op['operationId']
-                    prefix, action = operation.split('.', 1) if '.' in operation else {'rescheduleMessage':('message','reschedule'),'cancelScheduledMessage':('message','cancel'),'processInboundMessage':('message','process')}[operation]
+                    prefix, action = operation.split('.', 1) if '.' in operation else {
+                        'rescheduleMessage': ('message', 'reschedule'),
+                        'cancelScheduledMessage': ('message', 'cancel'),
+                        'processInboundMessage': ('message', 'process'),
+                        'getReportForwarding': ('project', 'retrieveReportForwarding'),
+                        'updateReportForwarding': ('project', 'updateReportForwarding'),
+                        'deleteReportForwarding': ('project', 'deleteReportForwarding'),
+                        'verifyReportForwarding': ('project', 'verifyReportForwarding'),
+                        'resendReportForwardingCode': ('project', 'resendReportForwardingCode'),
+                    }[operation]
                     group = 'Email' if surface == 'sending' else ('API' if prefix == 'v1' else name({'domain':'domains','message':'messages','project':'projects','route':'routes','suppression':'suppressions','webhook':'webhooks'}.get(prefix,prefix)))
                     method = mapping.get(action, snake(action))
                     if prefix == 'stats': method = 'retrieve'
@@ -121,6 +133,9 @@ class Generator:
                     variants = [r.get('content',{}).get('application/json',{}).get('schema') for r in responses]
                     variants = [v for v in variants if v]
                     schema = variants[0] if len(variants)==1 else {'anyOf':variants} if variants else {}
+                    # Keep the existing response name for project creation.
+                    if operation == 'project.store':
+                        schema = self.schemas['ProjectCreatedData']
                     response = ':ping' if action=='ping' else ':raw' if raw else self.type(schema,{'v1.sendMail':'SendEmailResponse','v1.sendBatchMail':'SendBatchEmailResponse'}.get(operation,name(operation)+'Response'))
                     args = ['client'] + [snake(p) for p in params] + (['payload'] if payload else [])
                     route = re.sub(r'\{([^}]+)\}',lambda m: '#{Lettermint.Transport.segment('+snake(m[1])+')}',path)
@@ -144,7 +159,7 @@ def snake(value):
 def main():
     parser=argparse.ArgumentParser()
     parser.add_argument('--check',action='store_true')
-    parser.add_argument('--spec-dir',type=Path,default=ROOT/'specs')
+    parser.add_argument('--spec-dir',type=Path,required=True,help='External directory with sending-openapi.json and team-openapi.json')
     args=parser.parse_args()
     specs={k:json.loads((args.spec_dir/(k+'-openapi.json')).read_text()) for k in ['sending','team']}
     for relative, content in Generator(specs).generate().items():

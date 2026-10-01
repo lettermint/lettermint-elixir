@@ -181,8 +181,8 @@ mix test --warnings-as-errors
 
 ```sh
 mix deps.get
-python3 tools/generate.py
-python3 tools/generate.py --check
+python3 tools/generate.py --spec-dir /path/to/api-repository/docs/api-reference
+python3 tools/generate.py --check --spec-dir /path/to/api-repository/docs/api-reference
 python3 -m unittest discover -s tools -p 'test_*.py'
 mix format --check-formatted
 mix compile --warnings-as-errors
@@ -191,9 +191,15 @@ mix hex.audit
 mix hex.build
 ```
 
-The generator requires Python 3 and Elixir. Both API specifications are pinned in `specs/`. It does not use files from another SDK. It generates models, endpoint functions, and the operation manifest. Do not edit `lib/lettermint/generated.ex` by hand.
+The generator requires Python 3 and Elixir. It reads `sending-openapi.json` and `team-openapi.json` from the external directory given by `--spec-dir`. Do not copy source specifications into this repository. The generator creates models, endpoint functions, and the operation manifest. Do not edit `lib/lettermint/generated.ex` by hand.
 
-Tests use stored API contracts, synthetic fixtures, and a local HTTP server. They do not call the production API.
+Normal tests use small test inputs, the operation manifest, synthetic fixtures, and a local HTTP server. They do not require source specifications or call the production API. To run the full external contract tests, set `LETTERMINT_SPEC_DIR`:
+
+```sh
+LETTERMINT_SPEC_DIR=/path/to/api-repository/docs/api-reference python3 -m unittest discover -s tools -p 'test_*.py'
+```
+
+CI runs the normal tests. Run the external checks before an API contract update.
 
 </details>
 

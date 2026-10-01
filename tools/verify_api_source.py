@@ -15,10 +15,6 @@ def verify(api):
             differences.append(relative)
     for pattern in record['source_patterns']:
         differences.extend(str(p.relative_to(api)) for p in api.glob(pattern) if str(p.relative_to(api)) not in record['files'])
-    for name in ['sending', 'team']:
-        upstream = api/'docs/api-reference'/f'{name}-openapi.json'
-        if json.loads(upstream.read_text()) != json.loads((ROOT/'specs'/f'{name}-openapi.json').read_text()):
-            differences.append(f'SDK snapshot: {name}')
     fixture = ROOT/'test/fixtures/api-source.json'
     if hashlib.sha256(fixture.read_bytes()).hexdigest() != record['fixtures_sha256']:
         differences.append('API fixture snapshot')
@@ -31,4 +27,4 @@ if __name__ == '__main__':
     differences = verify(args.api_repository)
     if differences:
         raise SystemExit('API contract review required:\n'+'\n'.join(differences))
-    print('API source and SDK snapshots match the verified contract.')
+    print('API source and SDK fixtures match the verified contract.')

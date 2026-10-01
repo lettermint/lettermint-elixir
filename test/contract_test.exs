@@ -50,8 +50,60 @@ defmodule Lettermint.ContractTest do
     routes = MapSet.new(@fixtures["routes"], &{&1["method"], &1["path"]})
     generated = MapSet.new(@operations, &{&1["verb"], &1["path"]})
     assert routes == generated
-    assert MapSet.size(routes) == 52
-    assert length(@operations) == 53
+    assert MapSet.size(routes) == 58
+    assert length(@operations) == 59
+  end
+
+  test "analytics, forwarding, and empty delete responses" do
+    client = Lettermint.api("team-token", adapter: Lettermint.TestAdapter)
+
+    Process.put(
+      :response,
+      {:ok, 200,
+       Jason.encode!(%{
+         data: %{summary: %{metrics: %{accepted: 12, delivery_rate: nil}}},
+         meta: %{timezone: "UTC"},
+         pagination: %{total_groups: 0, returned_groups: 0, next_cursor: nil, truncated: false}
+       })}
+    )
+
+    assert {:ok, analytics} = Lettermint.API.analytics(client, %{metrics: ["accepted"]})
+    assert analytics.meta.timezone == "UTC"
+    assert analytics.data.summary.metrics.delivery_rate == nil
+
+    Process.put(
+      :response,
+      {:ok, 200, Jason.encode!(%{data: %{destination: nil, verified: false, verified_at: nil}})}
+    )
+
+    assert {:ok, forwarding} =
+             Lettermint.Projects.retrieve_report_forwarding(client, "project/id")
+
+    assert forwarding.data.destination == nil
+    assert forwarding.data.verified == false
+    Process.put(:response, {:ok, 204, ""})
+    assert {:ok, nil} = Lettermint.Projects.delete_report_forwarding(client, "project/id")
+  end
+
+  test "message pages keep current metadata and legacy cursor fields" do
+    current =
+      Model.from_map(Lettermint.Models.MessageIndexResponse, %{
+        "data" => [],
+        "links" => [],
+        "meta" => %{"path" => "/messages", "per_page" => 1, "next_cursor" => nil}
+      })
+
+    assert current.meta.per_page == 1
+    assert current.extra == %{}
+
+    legacy =
+      Model.from_map(Lettermint.Models.MessageIndexResponse, %{
+        "data" => [],
+        "path" => "/messages",
+        "per_page" => 1
+      })
+
+    assert legacy.per_page == 1
   end
 
   for operation <- @operations do

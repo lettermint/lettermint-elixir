@@ -37,6 +37,18 @@
   },
   {
     "surface": "team",
+    "operationId": "v1.analytics",
+    "module": "Lettermint.API",
+    "method": "analytics",
+    "verb": "POST",
+    "path": "/analytics",
+    "params": [],
+    "payload": true,
+    "request": "{:model, Lettermint.Models.V1AnalyticsRequest}",
+    "response": "{:model, Lettermint.Models.V1AnalyticsResponse}"
+  },
+  {
+    "surface": "team",
     "operationId": "domain.index",
     "module": "Lettermint.Domains",
     "method": "list",
@@ -277,6 +289,76 @@
     "payload": false,
     "request": null,
     "response": "{:model, Lettermint.Models.ProcessInboundMessageResponse}"
+  },
+  {
+    "surface": "team",
+    "operationId": "getReportForwarding",
+    "module": "Lettermint.Projects",
+    "method": "retrieve_report_forwarding",
+    "verb": "GET",
+    "path": "/projects/{projectId}/report-forwarding",
+    "params": [
+      "projectId"
+    ],
+    "payload": false,
+    "request": null,
+    "response": "{:model, Lettermint.Models.GetReportForwardingResponse}"
+  },
+  {
+    "surface": "team",
+    "operationId": "updateReportForwarding",
+    "module": "Lettermint.Projects",
+    "method": "update_report_forwarding",
+    "verb": "PUT",
+    "path": "/projects/{projectId}/report-forwarding",
+    "params": [
+      "projectId"
+    ],
+    "payload": true,
+    "request": "{:model, Lettermint.Models.ReportForwardingRequest}",
+    "response": "{:model, Lettermint.Models.UpdateReportForwardingResponse}"
+  },
+  {
+    "surface": "team",
+    "operationId": "deleteReportForwarding",
+    "module": "Lettermint.Projects",
+    "method": "delete_report_forwarding",
+    "verb": "DELETE",
+    "path": "/projects/{projectId}/report-forwarding",
+    "params": [
+      "projectId"
+    ],
+    "payload": false,
+    "request": null,
+    "response": ":any"
+  },
+  {
+    "surface": "team",
+    "operationId": "verifyReportForwarding",
+    "module": "Lettermint.Projects",
+    "method": "verify_report_forwarding",
+    "verb": "POST",
+    "path": "/projects/{projectId}/report-forwarding/verify",
+    "params": [
+      "projectId"
+    ],
+    "payload": true,
+    "request": "{:model, Lettermint.Models.VerifyReportForwardingRequest}",
+    "response": "{:model, Lettermint.Models.VerifyReportForwardingResponse}"
+  },
+  {
+    "surface": "team",
+    "operationId": "resendReportForwardingCode",
+    "module": "Lettermint.Projects",
+    "method": "resend_report_forwarding_code",
+    "verb": "POST",
+    "path": "/projects/{projectId}/report-forwarding/resend-code",
+    "params": [
+      "projectId"
+    ],
+    "payload": false,
+    "request": null,
+    "response": "{:model, Lettermint.Models.ResendReportForwardingCodeResponse}"
   },
   {
     "surface": "team",

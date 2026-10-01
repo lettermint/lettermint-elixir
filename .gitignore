@@ -6,3 +6,6 @@
 /cover/
 .env
 __pycache__/
+*-openapi.json
+*-openapi.yaml
+*-openapi.yml

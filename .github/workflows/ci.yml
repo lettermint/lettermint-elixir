@@ -54,10 +54,9 @@ jobs:
         if: matrix.elixir == '1.20.4'
         with:
           python-version: '3.12'
-      - name: Check generated source
+      - name: Test generator and operation coverage
         if: matrix.elixir == '1.20.4'
         run: |
-          python3 tools/generate.py --check
           python3 -m unittest discover -s tools -p 'test_*.py'
       - if: matrix.elixir == '1.20.4'
         run: mix format --check-formatted
