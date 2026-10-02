@@ -1,11 +1,11 @@
 {
-  "api_revision": "cc20d3a24c8e1fdfc18dc3ced7a49071505dfba4",
-  "verified_date": "2026-10-01",
+  "api_revision": "bfabb708ead47ee31922a7ae772e3d6376ac2ea4",
+  "verified_date": "2026-10-02",
   "files": {
     "docs/api-reference/sending-openapi.json": "c2aafb6d48a2572e688224629076748322f9c257394f18fe8879efb3f05059cb",
-    "docs/api-reference/team-openapi.json": "d29092db4b56011987088aadd8b71d2e3fe8a242441b206bfa6cf49d7409c31e",
+    "docs/api-reference/team-openapi.json": "e385c5f9b330633e943729ecb0e1b93fca96e84fecb2f111b3af8f0bafa0cc75",
     "docs/scripts/split-openapi.cjs": "1755b36a2dffe9820dfeb6164d0daa6a40b3d4addac831443a1faa9c30135016"
   },
-  "fixtures_sha256": "db1a8eb92ddd86177e07dec2c5739719f78a1fd4fcf1049bf6cb1c25daeac3bc",
+  "fixtures_sha256": "c30008ddb859dec1fffa2a368c19299bff416b7f058ad7194a8da8200638057f",
   "scope": "Public contract inputs and synthetic serializer fixtures only."
 }

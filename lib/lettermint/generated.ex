@@ -2100,6 +2100,7 @@ defmodule Lettermint.Models.StoreWebhookData do
             project_ids: :unset,
             route_ids: :unset,
             route_id: :unset,
+            basic_auth: :unset,
             extra: %{}
 
   @type t :: %__MODULE__{
@@ -2113,6 +2114,7 @@ defmodule Lettermint.Models.StoreWebhookData do
           project_ids: [String.t()] | nil | :unset,
           route_ids: [String.t()] | nil | :unset,
           route_id: String.t() | nil | :unset,
+          basic_auth: Lettermint.Models.WebhookBasicAuthData.t() | nil | :unset,
           extra: map()
         }
   def __schema__,
@@ -2126,7 +2128,8 @@ defmodule Lettermint.Models.StoreWebhookData do
       {"scope", :scope, :string},
       {"project_ids", :project_ids, {:list, :string}},
       {"route_ids", :route_ids, {:list, :string}},
-      {"route_id", :route_id, :string}
+      {"route_id", :route_id, :string},
+      {"basic_auth", :basic_auth, {:model, Lettermint.Models.WebhookBasicAuthData}}
     ]
 end
 
@@ -2764,6 +2767,7 @@ defmodule Lettermint.Models.UpdateWebhookData do
             project_ids: :unset,
             route_ids: :unset,
             route_id: :unset,
+            basic_auth: :unset,
             extra: %{}
 
   @type t :: %__MODULE__{
@@ -2777,6 +2781,7 @@ defmodule Lettermint.Models.UpdateWebhookData do
           project_ids: [String.t()] | nil | :unset,
           route_ids: [String.t()] | nil | :unset,
           route_id: String.t() | nil | :unset,
+          basic_auth: Lettermint.Models.WebhookBasicAuthData.t() | nil | :unset,
           extra: map()
         }
   def __schema__,
@@ -2790,7 +2795,8 @@ defmodule Lettermint.Models.UpdateWebhookData do
       {"scope", :scope, :string},
       {"project_ids", :project_ids, {:list, :string}},
       {"route_ids", :route_ids, {:list, :string}},
-      {"route_id", :route_id, :string}
+      {"route_id", :route_id, :string},
+      {"basic_auth", :basic_auth, {:model, Lettermint.Models.WebhookBasicAuthData}}
     ]
 end
 
@@ -6541,6 +6547,18 @@ defmodule Lettermint.Models.VerifyReportForwardingResponse do
   def __schema__, do: [{"data", :data, {:model, Lettermint.Models.ReportForwardingResource}}]
 end
 
+defmodule Lettermint.Models.WebhookBasicAuthData do
+  @moduledoc "Generated API model. `:unset` fields are omitted from requests."
+  defstruct username: :unset, password: :unset, extra: %{}
+
+  @type t :: %__MODULE__{
+          username: String.t() | nil | :unset,
+          password: String.t() | nil | :unset,
+          extra: map()
+        }
+  def __schema__, do: [{"username", :username, :string}, {"password", :password, :string}]
+end
+
 defmodule Lettermint.Models.WebhookData do
   @moduledoc "Generated API model. `:unset` fields are omitted from requests."
   defstruct id: :unset,
@@ -6550,6 +6568,7 @@ defmodule Lettermint.Models.WebhookData do
             route_id: :unset,
             name: :unset,
             url: :unset,
+            has_basic_auth: :unset,
             events: :unset,
             enabled: :unset,
             include_machine_events: :unset,
@@ -6567,6 +6586,7 @@ defmodule Lettermint.Models.WebhookData do
           route_id: String.t() | nil | :unset,
           name: String.t() | nil | :unset,
           url: String.t() | nil | :unset,
+          has_basic_auth: boolean() | nil | :unset,
           events: [String.t()] | nil | :unset,
           enabled: boolean() | nil | :unset,
           include_machine_events: boolean() | nil | :unset,
@@ -6585,6 +6605,7 @@ defmodule Lettermint.Models.WebhookData do
       {"route_id", :route_id, :string},
       {"name", :name, :string},
       {"url", :url, :string},
+      {"has_basic_auth", :has_basic_auth, :boolean},
       {"events", :events, {:list, :string}},
       {"enabled", :enabled, :boolean},
       {"include_machine_events", :include_machine_events, :boolean},
@@ -6832,6 +6853,7 @@ defmodule Lettermint.Models.WebhookListData do
             route_id: :unset,
             name: :unset,
             url: :unset,
+            has_basic_auth: :unset,
             events: :unset,
             enabled: :unset,
             delivery_mode_filter: :unset,
@@ -6848,6 +6870,7 @@ defmodule Lettermint.Models.WebhookListData do
           route_id: String.t() | nil | :unset,
           name: String.t() | nil | :unset,
           url: String.t() | nil | :unset,
+          has_basic_auth: boolean() | nil | :unset,
           events: [String.t()] | nil | :unset,
           enabled: boolean() | nil | :unset,
           delivery_mode_filter: String.t() | nil | :unset,
@@ -6865,6 +6888,7 @@ defmodule Lettermint.Models.WebhookListData do
       {"route_id", :route_id, :string},
       {"name", :name, :string},
       {"url", :url, :string},
+      {"has_basic_auth", :has_basic_auth, :boolean},
       {"events", :events, {:list, :string}},
       {"enabled", :enabled, :boolean},
       {"delivery_mode_filter", :delivery_mode_filter, :string},
@@ -6905,6 +6929,7 @@ defmodule Lettermint.Models.WebhookSecretData do
             route_id: :unset,
             name: :unset,
             url: :unset,
+            has_basic_auth: :unset,
             events: :unset,
             enabled: :unset,
             include_machine_events: :unset,
@@ -6923,6 +6948,7 @@ defmodule Lettermint.Models.WebhookSecretData do
           route_id: String.t() | nil | :unset,
           name: String.t() | nil | :unset,
           url: String.t() | nil | :unset,
+          has_basic_auth: boolean() | nil | :unset,
           events: [String.t()] | nil | :unset,
           enabled: boolean() | nil | :unset,
           include_machine_events: boolean() | nil | :unset,
@@ -6942,6 +6968,7 @@ defmodule Lettermint.Models.WebhookSecretData do
       {"route_id", :route_id, :string},
       {"name", :name, :string},
       {"url", :url, :string},
+      {"has_basic_auth", :has_basic_auth, :boolean},
       {"events", :events, {:list, :string}},
       {"enabled", :enabled, :boolean},
       {"include_machine_events", :include_machine_events, :boolean},
