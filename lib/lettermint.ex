@@ -1,58 +1,95 @@
 defmodule Lettermint do
-  @moduledoc "Clients for the Lettermint sending and team APIs."
-  @doc "Create a client with a project token."
-  def email(token, opts \\ []), do: Lettermint.Client.new(:sending, token, opts)
-  @doc "Create a client with a team token."
-  def api(token, opts \\ []), do: Lettermint.Client.new(:team, token, opts)
-end
+  @moduledoc """
+  The Lettermint client.
 
-defmodule Lettermint.Client do
-  @moduledoc "An immutable API client. Create it with `Lettermint.email/2` or `Lettermint.api/2`."
-  @derive {Inspect, only: [:surface, :base_url, :timeout]}
-  @enforce_keys [:surface, :token]
-  defstruct [
-    :surface,
-    :token,
-    base_url: "https://api.lettermint.co/v1",
-    timeout: 30_000,
-    adapter: Lettermint.HTTP
-  ]
+      lettermint =
+        Lettermint.new(
+          sending_token: System.get_env("LETTERMINT_PROJECT_TOKEN"),
+          team_token: System.get_env("LETTERMINT_TEAM_TOKEN")
+        )
 
-  @type t :: %__MODULE__{
-          surface: :sending | :team,
-          token: String.t(),
-          base_url: String.t(),
-          timeout: pos_integer(),
-          adapter: module()
-        }
+      lettermint = Lettermint.new("lm_...")  # team or sending token, detected by its format
 
-  @doc false
-  def new(surface, token, opts) when is_binary(token) and byte_size(token) > 0 do
-    unless String.trim(token) == token and not String.contains?(token, ["\r", "\n"]) do
-      raise ArgumentError, "Invalid API token"
+  Pass the client as the first argument to the SDK's functions:
+
+    * `Lettermint.Emails` and `Lettermint.EmailBuilder` send email with the
+      sending token (`x-lettermint-token`);
+    * every other module uses the team token (`Authorization: Bearer`):
+      `Lettermint.Domains`, `Lettermint.Messages`, `Lettermint.Projects`,
+      `Lettermint.Projects.ReportForwarding`, `Lettermint.Routes`,
+      `Lettermint.Stats`, `Lettermint.Suppressions`, `Lettermint.Team`,
+      `Lettermint.Team.Members`, `Lettermint.Webhooks`,
+      `Lettermint.Webhooks.Deliveries`, and `analytics/3` and
+      `blocked_file_types/2` below;
+    * `ping/2`, `Lettermint.Messages.reschedule/4` and
+      `Lettermint.Messages.cancel/3` use the team token when it is set,
+      otherwise the sending token.
+
+  The SDK never falls back to the other token. When the token a function
+  needs is missing, it raises `Lettermint.ConfigError` before any request.
+
+  Functions that call the API return `{:ok, result}` (or `:ok` when the API
+  answers without a body) or `{:error, error}`; see `Lettermint.Error`.
+  """
+
+  alias Lettermint.{Client, Transport, Types}
+
+  @doc """
+  Creates a client from options or from a token string.
+
+  ## Options
+
+    * `:sending_token`: a project sending token (`lm_...`), for `Lettermint.Emails`
+    * `:team_token`: a team API token (`lm_team_...`), for the Team API
+    * `:base_url`: default `"https://api.lettermint.co/v1"`
+    * `:timeout`: milliseconds, default `30_000`. It covers the whole request,
+      including reading the body. Each call can override it with `timeout:`.
+    * `:adapter`: the HTTP adapter, a module or `{module, options}`; default
+      `Lettermint.Adapter.Req`. See `Lettermint.Adapter`.
+
+  Pass at least one token. With a token string, the SDK picks the token type
+  by its format: `lm_team_` followed by letters and digits is a team token,
+  `lm_` followed by letters and digits a sending token. Any other format, such
+  as an SSO token (`lm_sso_...`), raises `Lettermint.ConfigError`; pass it
+  with `:sending_token` or `:team_token` instead. Errors never contain the
+  token.
+
+      Lettermint.new(sending_token: token)
+      Lettermint.new(token, timeout: 10_000)
+  """
+  @spec new(String.t() | keyword()) :: Client.t()
+  def new(token_or_options), do: Client.new(token_or_options)
+
+  @doc "Creates a client from a token string and options. See `new/1`."
+  @spec new(String.t(), keyword()) :: Client.t()
+  def new(token, options), do: Client.new(token, options)
+
+  @doc """
+  Checks the configured token: `GET /ping` returns `"pong"`. Uses the team
+  token when configured, otherwise the sending token.
+  """
+  @spec ping(Client.t(), timeout: pos_integer()) ::
+          {:ok, String.t()} | {:error, Lettermint.Error.t()}
+  def ping(%Client{} = client, options \\ []) do
+    with {:ok, text} <- Transport.call(client, "GET /ping", %{label: "ping", options: options}) do
+      {:ok, String.trim(text)}
     end
-
-    unknown = Keyword.keys(opts) -- [:base_url, :timeout, :adapter]
-    if unknown != [], do: raise(ArgumentError, "Unknown client option")
-    client = struct!(__MODULE__, [surface: surface, token: token] ++ opts)
-    uri = URI.parse(client.base_url)
-
-    unless uri.scheme in ["http", "https"] and uri.host not in [nil, ""] and
-             is_nil(uri.userinfo) and is_nil(uri.query) and is_nil(uri.fragment) do
-      raise ArgumentError, "Invalid API base URL"
-    end
-
-    unless is_integer(client.timeout) and client.timeout > 0,
-      do: raise(ArgumentError, "Invalid timeout")
-
-    %{client | base_url: String.trim_trailing(client.base_url, "/")}
   end
 
-  def new(_, _, _), do: raise(ArgumentError, "An API token is required")
-end
+  @doc "Queries email analytics. Needs `:team_token`."
+  @spec analytics(Client.t(), Types.AnalyticsQuery.t() | map(), timeout: pos_integer()) ::
+          {:ok, Types.AnalyticsResponse.t()} | {:error, Lettermint.Error.t()}
+  def analytics(%Client{} = client, query, options \\ []) do
+    Transport.call(client, "POST /analytics", %{label: "analytics", body: query, options: options})
+  end
 
-defmodule Lettermint.Error do
-  @moduledoc "An API, transport, or response error. API response data is available in `body`."
-  defexception [:kind, :status, :body, message: "Lettermint request failed"]
-  @type t :: %__MODULE__{kind: atom(), status: integer() | nil, body: term(), message: String.t()}
+  @doc "The file extensions and MIME types that cannot be attached. Needs `:team_token`."
+  @spec blocked_file_types(Client.t(), timeout: pos_integer()) ::
+          {:ok, Types.BlockedFileTypes.t()} | {:error, Lettermint.Error.t()}
+  def blocked_file_types(%Client{} = client, options \\ []) do
+    Transport.call(client, "GET /blocked-file-types", %{
+      label: "blocked_file_types",
+      options: options
+    })
+  end
 end
