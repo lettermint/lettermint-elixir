@@ -39,17 +39,12 @@ jobs:
           path: deps
           key: deps-${{ runner.os }}-${{ matrix.elixir }}-${{ matrix.otp }}-${{ hashFiles('mix.lock') }}
       - run: mix deps.get --check-locked
-      - name: Check release version
+      - name: Set release version
         if: github.event_name == 'release'
+        shell: bash
         env:
           RELEASE_TAG: ${{ github.event.release.tag_name }}
-        run: |
-          mix run --no-start -e '
-            tag = System.fetch_env!("RELEASE_TAG") |> String.trim_leading("v")
-            unless tag == Mix.Project.config()[:version] do
-              raise "Release tag must match the version in mix.exs"
-            end
-          '
+        run: .github/scripts/set-release-version.sh
       - uses: actions/setup-python@v7
         if: matrix.elixir == '1.20.4'
         with:

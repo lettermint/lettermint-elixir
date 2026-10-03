@@ -30,6 +30,11 @@ jobs:
           elixir-version: '1.20.4'
           otp-version: '29.0'
       - run: mix deps.get --check-locked
+      - name: Set release version
+        shell: bash
+        env:
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+        run: .github/scripts/set-release-version.sh
       - name: Publish to Hex and HexDocs
         env:
           HEX_API_KEY: ${{ secrets.HEX_API_KEY }}
