@@ -8,6 +8,7 @@
             "route_id": "fixture-value",
             "name": "fixture-value",
             "url": "fixture-value",
+            "has_basic_auth": true,
             "events": [],
             "enabled": true,
             "include_machine_events": true,
@@ -17,6 +18,10 @@
             "created_at": "2026-09-07T12:00:00+00:00",
             "updated_at": "2026-09-07T12:00:00+00:00"
         },
+        "WebhookBasicAuthData": {
+            "username": "fixture-value",
+            "password": "fixture-value"
+        },
         "WebhookData": {
             "id": "fixture-value",
             "scope": "team",
@@ -25,6 +30,7 @@
             "route_id": "fixture-value",
             "name": "fixture-value",
             "url": "fixture-value",
+            "has_basic_auth": true,
             "events": [],
             "enabled": true,
             "include_machine_events": true,
@@ -41,6 +47,7 @@
             "route_id": "fixture-value",
             "name": "fixture-value",
             "url": "fixture-value",
+            "has_basic_auth": true,
             "events": [],
             "enabled": true,
             "delivery_mode_filter": "live",
@@ -1016,6 +1023,7 @@
                     "route_id": "fixture-value",
                     "name": "fixture-value",
                     "url": "fixture-value",
+                    "has_basic_auth": true,
                     "events": [],
                     "enabled": true,
                     "delivery_mode_filter": "live",
