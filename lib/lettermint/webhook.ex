@@ -1,7 +1,17 @@
 defmodule Lettermint.Webhook do
   @moduledoc "Verify a webhook signature against the original request body."
-  @doc "Return `:ok` or `{:error, :invalid_signature}`. Default time tolerance: 300 seconds."
-  def verify(body, signature, secret, opts \\ []) do
+  @doc """
+  Return `:ok` or `{:error, :invalid_signature}`. Default time tolerance: 300 seconds.
+
+  A `nil` or empty secret never verifies, so a missing configuration value cannot be
+  used to forge a valid signature.
+  """
+  def verify(body, signature, secret, opts \\ [])
+
+  def verify(_body, _signature, secret, _opts) when secret in [nil, ""],
+    do: {:error, :invalid_signature}
+
+  def verify(body, signature, secret, opts) do
     now = Keyword.get(opts, :now, System.system_time(:second))
     tolerance = Keyword.get(opts, :tolerance, 300)
 

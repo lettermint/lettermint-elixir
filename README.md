@@ -160,7 +160,7 @@ Client options: `timeout` in milliseconds, `base_url` (default `https://api.lett
 Lettermint.Webhook.verify(raw_body, signature_header, webhook_secret)
 ```
 
-Pass the original request body bytes before JSON decoding. The signature has the format `t=timestamp,v1=hash`. Verification returns `:ok` or `{:error, :invalid_signature}`. The default time tolerance is 300 seconds in either direction. Options `now` and `tolerance` use seconds.
+Pass the original request body bytes before JSON decoding. The signature has the format `t=timestamp,v1=hash`. Verification returns `:ok` or `{:error, :invalid_signature}`. A `nil` or empty secret never verifies. The default time tolerance is 300 seconds in either direction. Options `now` and `tolerance` use seconds.
 
 ## Swoosh
 

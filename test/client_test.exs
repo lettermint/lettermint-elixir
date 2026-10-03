@@ -219,4 +219,14 @@ defmodule Lettermint.ClientTest do
       assert {:error, :invalid_signature} = Webhook.verify(b, s, key, now: now)
     end
   end
+
+  test "webhook rejects a missing or empty secret even with a matching signature" do
+    body = ~s({"name":"Café"})
+    hash = :crypto.mac(:hmac, :sha256, "", "1000." <> body) |> Base.encode16(case: :lower)
+    signature = "t=1000,v1=#{hash}"
+
+    for secret <- ["", nil] do
+      assert {:error, :invalid_signature} = Webhook.verify(body, signature, secret, now: 1000)
+    end
+  end
 end
