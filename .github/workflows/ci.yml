@@ -21,9 +21,13 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
+        # The oldest supported pair (Elixir 1.15 on OTP 25, which 2.0 needs for
+        # :crypto.hash_equals/2), a middle one and the newest.
         include:
           - elixir: '1.15.8'
-            otp: '26.2'
+            otp: '25.3'
+          - elixir: '1.17.3'
+            otp: '27.2'
           - elixir: '1.20.4'
             otp: '29.0'
     steps:
@@ -45,14 +49,10 @@ jobs:
         env:
           RELEASE_TAG: ${{ github.event.release.tag_name }}
         run: .github/scripts/set-release-version.sh
-      - uses: actions/setup-python@v7
+      # The generator is private; without it this only verifies the generated headers.
+      - name: Check generated code
         if: matrix.elixir == '1.20.4'
-        with:
-          python-version: '3.12'
-      - name: Test generator and operation coverage
-        if: matrix.elixir == '1.20.4'
-        run: |
-          python3 -m unittest discover -s tools -p 'test_*.py'
+        run: scripts/generate.sh --check
       - if: matrix.elixir == '1.20.4'
         run: mix format --check-formatted
       - run: mix compile --warnings-as-errors
