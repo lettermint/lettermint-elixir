@@ -1,5 +1,14 @@
 # Changelog
 
+## v2.0.0 - 2026-10-04
+
+### What's Changed
+
+* feat(webhooks): support Basic Auth credentials and read flags by @bjarn in https://github.com/lettermint/lettermint-elixir/pull/9
+* feat!: Lettermint Elixir SDK 2.0 by @bjarn in https://github.com/lettermint/lettermint-elixir/pull/10
+
+**Full Changelog**: https://github.com/lettermint/lettermint-elixir/compare/v1.2.0...v2.0.0
+
 ## v1.1.0 - 2026-09-14
 
 ### What's Changed
