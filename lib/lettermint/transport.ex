@@ -368,7 +368,10 @@ defmodule Lettermint.Transport do
         )
 
       status when status >= 500 ->
-        struct(Lettermint.ServerError, fields)
+        struct(
+          Lettermint.ServerError,
+          [retry_after: retry_after(header(response, "retry-after"))] ++ fields
+        )
 
       _ ->
         struct(Lettermint.APIError, fields)
