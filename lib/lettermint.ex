@@ -19,8 +19,8 @@ defmodule Lettermint do
       `Lettermint.Projects.ReportForwarding`, `Lettermint.Routes`,
       `Lettermint.Stats`, `Lettermint.Suppressions`, `Lettermint.Team`,
       `Lettermint.Team.Members`, `Lettermint.Webhooks`,
-      `Lettermint.Webhooks.Deliveries`, and `analytics/3` and
-      `blocked_file_types/2` below;
+      `Lettermint.Webhooks.Deliveries`, and `analytics/3`,
+      `analytics_pages/3` and `blocked_file_types/2` below;
     * `ping/2`, `Lettermint.Messages.reschedule/4` and
       `Lettermint.Messages.cancel/3` use the team token when it is set,
       otherwise the sending token.
@@ -82,6 +82,66 @@ defmodule Lettermint do
   def analytics(%Client{} = client, query, options \\ []) do
     Transport.call(client, "POST /analytics", %{label: "analytics", body: query, options: options})
   end
+
+  @doc """
+  Queries email analytics and follows `pagination.next_cursor`: a lazy `Stream`
+  of whole responses, one per request. Each response carries the next page of
+  `data.breakdown` with its own `meta` and `pagination`. Needs `:team_token`.
+
+  A cursor expires 60 seconds after its response, so request the next page
+  promptly. Raises the error of a failed page request; an expired cursor is a
+  `Lettermint.ValidationError`.
+  """
+  @spec analytics_pages(Client.t(), Types.AnalyticsQuery.t() | map(), timeout: pos_integer()) ::
+          Enumerable.t(Types.AnalyticsResponse.t())
+  def analytics_pages(%Client{} = client, query, options \\ []) do
+    Transport.assert_auth(client, "POST /analytics", "analytics_pages")
+    Transport.check_options(options, "analytics_pages")
+
+    unless is_map(query) do
+      raise Lettermint.ConfigError,
+            "analytics_pages: the query must be a map or a %Lettermint.Types.AnalyticsQuery{}; pass options such as :timeout in the last argument."
+    end
+
+    Stream.resource(
+      fn -> {query, MapSet.new(List.wrap(query_cursor(Types.to_map(query))))} end,
+      fn
+        :done ->
+          {:halt, :done}
+
+        {body, seen} ->
+          case Transport.call(client, "POST /analytics", %{
+                 label: "analytics_pages",
+                 body: body,
+                 options: options
+               }) do
+            {:ok, page} ->
+              next = next_cursor(page)
+
+              if is_nil(next) or MapSet.member?(seen, next) do
+                {[page], :done}
+              else
+                {[page], {with_cursor(query, next), MapSet.put(seen, next)}}
+              end
+
+            {:error, error} ->
+              raise error
+          end
+      end,
+      fn _ -> :ok end
+    )
+  end
+
+  defp query_cursor(%{"cursor" => cursor}) when is_binary(cursor), do: cursor
+  defp query_cursor(_query), do: nil
+
+  defp next_cursor(%{pagination: %{next_cursor: cursor}}) when is_binary(cursor) and cursor != "",
+    do: cursor
+
+  defp next_cursor(_page), do: nil
+
+  # A copy of the query, as it is sent, with its cursor set.
+  defp with_cursor(query, cursor), do: query |> Types.to_map() |> Map.put("cursor", cursor)
 
   @doc "The file extensions and MIME types that cannot be attached. Needs `:team_token`."
   @spec blocked_file_types(Client.t(), timeout: pos_integer()) ::

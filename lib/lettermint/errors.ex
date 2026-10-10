@@ -3,10 +3,10 @@ defmodule Lettermint.Error do
   The errors of the Lettermint SDK.
 
   Every error is an exception struct. Functions that call the API return
-  `{:error, error}`; `iterate/3` streams raise the error instead. Configuration
-  errors (`Lettermint.ConfigError`) are always raised, because they are
-  programming errors: a missing or unrecognised token, an invalid option or an
-  invalid ID.
+  `{:error, error}`; `iterate/3` streams and `Lettermint.analytics_pages/3`
+  raise the error instead. Configuration errors (`Lettermint.ConfigError`) are
+  always raised, because they are programming errors: a missing or
+  unrecognised token, an invalid option or an invalid ID.
 
   | Error | When | Fields |
   | --- | --- | --- |
@@ -17,7 +17,7 @@ defmodule Lettermint.Error do
   | `Lettermint.ConflictError` | 409 | as `APIError` |
   | `Lettermint.ValidationError` | 422 | as `APIError`, plus `errors` |
   | `Lettermint.RateLimitError` | 429 | as `APIError`, plus `retry_after` (seconds) |
-  | `Lettermint.ServerError` | 5xx | as `APIError` |
+  | `Lettermint.ServerError` | 5xx | as `APIError`, plus `retry_after` (seconds, when the API sent `Retry-After`) |
   | `Lettermint.TimeoutError` | No complete response within the timeout | `timeout` |
   | `Lettermint.ConnectionError` | The request failed (DNS, TLS, refused, reset) | `reason` |
   | `Lettermint.UnexpectedResponseError` | An empty or non-JSON body where JSON was expected, or an error page such as a proxy's HTML 502 | `status`, `body_excerpt` |
@@ -129,8 +129,7 @@ for {module, doc} <- [
       {Lettermint.NotFoundError,
        "HTTP 404: the resource does not exist or is not visible to the token."},
       {Lettermint.ConflictError,
-       "HTTP 409: the request conflicts with the current state, for example an Idempotency-Key reused with a different body."},
-      {Lettermint.ServerError, "HTTP 5xx with a JSON or empty body."}
+       "HTTP 409: the request conflicts with the current state, for example an Idempotency-Key reused with a different body."}
     ] do
   defmodule module do
     @moduledoc """
@@ -184,6 +183,26 @@ defmodule Lettermint.RateLimitError do
 
   @type t :: %__MODULE__{
           status: 429,
+          code: String.t() | nil,
+          message: String.t(),
+          details: term(),
+          body: term(),
+          retry_after: non_neg_integer() | nil
+        }
+end
+
+defmodule Lettermint.ServerError do
+  @moduledoc """
+  HTTP 5xx with a JSON or empty body.
+
+  Has the fields of `Lettermint.APIError`, plus `retry_after`: the seconds to
+  wait, from the `Retry-After` header (seconds or an HTTP date), or `nil` when
+  the API did not send one.
+  """
+  defexception [:status, :code, :message, :details, :body, :retry_after]
+
+  @type t :: %__MODULE__{
+          status: pos_integer(),
           code: String.t() | nil,
           message: String.t(),
           details: term(),
