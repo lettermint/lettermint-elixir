@@ -140,6 +140,16 @@ defmodule Lettermint.TransportTest do
       assert Lettermint.Transport.retry_after("Sun, 06 Nov 1994 08:49:37 GMT") == 0
     end
 
+    test "a 5xx carries Retry-After when the API sent it" do
+      unavailable = json(503, %{message: "Service Unavailable"}, [{"retry-after", "2"}])
+
+      assert {:error, %Lettermint.ServerError{status: 503, retry_after: 2}} =
+               Lettermint.Team.retrieve(team_client(unavailable))
+
+      assert {:error, %Lettermint.ServerError{status: 500, retry_after: nil}} =
+               Lettermint.Team.retrieve(team_client(json(500, %{message: "Server Error"})))
+    end
+
     test "a 3xx is a RedirectError and is never followed" do
       client = sending_client(raw(307, "", [{"location", "https://evil.example/v1/send"}]))
 

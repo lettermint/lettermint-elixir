@@ -102,7 +102,7 @@ Functions that call the API return `{:ok, result}` or `{:error, error}`. Functio
 | `Lettermint.ConflictError` | 409 | as `APIError` |
 | `Lettermint.ValidationError` | 422 | as `APIError`, plus `errors` (field errors) |
 | `Lettermint.RateLimitError` | 429 | as `APIError`, plus `retry_after` (seconds) |
-| `Lettermint.ServerError` | 5xx | as `APIError` |
+| `Lettermint.ServerError` | 5xx | as `APIError`, plus `retry_after` (seconds, when the API sent `Retry-After`) |
 | `Lettermint.TimeoutError` | No complete response within the timeout | `timeout` |
 | `Lettermint.ConnectionError` | The request failed (DNS, TLS, refused, reset) | `reason` (for example a `Req.TransportError`) |
 | `Lettermint.UnexpectedResponseError` | An empty or non-JSON body where JSON was expected, or an error page such as a proxy's HTML 502 | `status`, `body_excerpt` |
@@ -314,7 +314,7 @@ project.api_token # the new project's sending token, shown once
 | `Lettermint.Team.Members` | `list`, `iterate`, `retrieve`, `update_assignment` |
 | `Lettermint.Webhooks` | `list`, `iterate`, `create`, `retrieve`, `update`, `delete`, `test`, `regenerate_secret` |
 | `Lettermint.Webhooks.Deliveries` | `list(client, webhook_id)`, `iterate(client, webhook_id)`, `retrieve(client, webhook_id, delivery_id)` |
-| `Lettermint` | `ping`, `analytics`, `blocked_file_types` |
+| `Lettermint` | `ping`, `analytics`, `analytics_pages`, `blocked_file_types` |
 
 Every function takes the client first and a keyword list of options last: `timeout:` (milliseconds, overrides the client's timeout) and, for `Lettermint.Emails.send/3`, `send_batch/3` and `Lettermint.Messages.process/3`, `idempotency_key:`. `Lettermint.Operations` lists every API operation with its method, path, token and types.
 
@@ -350,6 +350,52 @@ lettermint |> Lettermint.Webhooks.Deliveries.iterate(webhook_id) |> Enum.take(50
 ```
 
 The SDK requests the next page only when the stream gets to it. A failed page request raises its error, because a stream cannot return `{:error, error}`; use `list` for tuple results.
+
+### Analytics
+
+`Lettermint.analytics/3` runs one analytics query. `metrics` is the only required field; by default the API returns a summary of the last 30 days:
+
+```elixir
+{:ok, result} =
+  Lettermint.analytics(lettermint, %{
+    metrics: ["delivered", "bounced", "delivery_rate"],
+    from: "2026-10-01",
+    to: "2026-10-31",
+    timezone: "Europe/Amsterdam"
+  })
+
+result.data.summary.metrics.delivery_rate # 0.9836, or nil when there is no data
+{result.meta.partial, result.meta.effective_to}
+```
+
+Add `include` to ask for a `time_series` or a `breakdown`. A breakdown needs `group_by`, and the API returns its rows in pages of `limit` (at most 200). `Lettermint.analytics_pages/3` follows `pagination.next_cursor` for you. It returns a lazy `Stream` of whole responses, one per request, so each page keeps its `meta` and `pagination`:
+
+```elixir
+query = %{
+  metrics: ["delivered", "bounced"],
+  include: ["breakdown"],
+  group_by: ["recipient_domain"],
+  sort: %{metric: "bounced", direction: "desc"},
+  limit: 200
+}
+
+rows =
+  lettermint
+  |> Lettermint.analytics_pages(query)
+  |> Stream.each(fn page ->
+    if page.pagination.truncated, do: IO.puts(:stderr, "More groups exist than the API ranks.")
+  end)
+  |> Enum.flat_map(& &1.data.breakdown)
+```
+
+A cursor expires 60 seconds after its response, so read the next page promptly. Like `iterate`, the stream raises the error of a failed page request: an expired cursor raises a `Lettermint.ValidationError` with `errors["cursor"]`; run the query again to start over.
+
+A few things to know when you read a response:
+
+- A metric is `nil` when the API cannot measure it for that row or bucket, and a rate is `nil` when its denominator is zero. `0` means a measured zero. A metric the query did not ask for is `:unset`.
+- `data.summary`, `data.time_series` and `data.breakdown` are present only when `include` asks for them. `previous`, `change` and `meta.comparison` are present only with `compare`. Otherwise they are `:unset`.
+- `smtp_response_group` can be used in `group_by` but not as a filter dimension.
+- Analytics can answer `503` or `504` when a query takes too long or the service is busy. Both are a `Lettermint.ServerError`; see [Results and errors](#results-and-errors).
 
 ### Cancellation
 
