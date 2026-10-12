@@ -34,7 +34,7 @@ defmodule Lettermint.MixProject do
   defp deps do
     [
       {:req, "~> 0.7.4"},
-      {:mint, "~> 1.10.2"},
+      {:mint, "~> 1.11.0"},
       {:jason, "~> 1.4"},
       {:ex_doc, "~> 0.39", only: :dev, runtime: false}
     ]
