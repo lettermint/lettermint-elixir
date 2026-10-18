@@ -67,7 +67,7 @@ lettermint =
   )
 ```
 
-Each part uses its own token and never falls back to the other one. If the token a function needs is missing, it raises `Lettermint.ConfigError` that names the option (``domains.list needs :team_token``) before any request. `Lettermint.ping/2` uses the team token when it is set, otherwise the sending token. `Lettermint.Messages.reschedule/4` and `Lettermint.Messages.cancel/3` accept either token in the same way.
+Each part uses its own token and never falls back to the other one. If the token a function needs is missing, it raises `Lettermint.ConfigError` that names the option (``domains.list needs :team_token``) before any request. `Lettermint.ping/2` uses the team token when it is set, otherwise the sending token. `Lettermint.Messages.reschedule/4`, `Lettermint.Messages.cancel/3` and `Lettermint.Messages.resend/4` accept either token in the same way.
 
 You can also pass a single token as a string. The SDK chooses its type by the format: `lm_team_` followed by letters and digits is a team token, and `lm_` followed by letters and digits is a sending token. Any other value, such as an SSO verification token (`lm_sso_…`), raises `Lettermint.ConfigError`; pass it with `:sending_token` or `:team_token` instead. Error messages never contain the token.
 
@@ -299,12 +299,15 @@ project.api_token # the new project's sending token, shown once
 
 {:ok, stats} = Lettermint.Stats.retrieve(lettermint, %{from: "2026-10-01", to: "2026-10-31"})
 {:ok, html} = Lettermint.Messages.html(lettermint, "message-id")
+
+# Resend a message as a new message, to every original recipient or only some of them.
+{:ok, resent} = Lettermint.Messages.resend(lettermint, "message-id", %{recipients: ["jane@example.com"]})
 ```
 
 | Module | Functions |
 | --- | --- |
 | `Lettermint.Domains` | `list`, `iterate`, `create`, `retrieve`, `delete`, `verify_dns_records`, `verify_dns_record`, `update_projects` |
-| `Lettermint.Messages` | `list`, `iterate`, `retrieve`, `events`, `iterate_events`, `source`, `html`, `text`, `reschedule`, `cancel`, `process` |
+| `Lettermint.Messages` | `list`, `iterate`, `retrieve`, `events`, `iterate_events`, `source`, `html`, `text`, `reschedule`, `cancel`, `process`, `resend` |
 | `Lettermint.Projects` | `list`, `iterate`, `create`, `retrieve`, `update`, `delete`, `rotate_token` |
 | `Lettermint.Projects.ReportForwarding` | `retrieve`, `update`, `delete`, `verify`, `resend_code` |
 | `Lettermint.Routes` | `list(client, project_id)`, `iterate(client, project_id)`, `create(client, project_id, …)`, `retrieve`, `update`, `delete`, `verify_inbound_domain` |
@@ -316,7 +319,7 @@ project.api_token # the new project's sending token, shown once
 | `Lettermint.Webhooks.Deliveries` | `list(client, webhook_id)`, `iterate(client, webhook_id)`, `retrieve(client, webhook_id, delivery_id)` |
 | `Lettermint` | `ping`, `analytics`, `analytics_pages`, `blocked_file_types` |
 
-Every function takes the client first and a keyword list of options last: `timeout:` (milliseconds, overrides the client's timeout) and, for `Lettermint.Emails.send/3`, `send_batch/3` and `Lettermint.Messages.process/3`, `idempotency_key:`. `Lettermint.Operations` lists every API operation with its method, path, token and types.
+Every function takes the client first and a keyword list of options last: `timeout:` (milliseconds, overrides the client's timeout) and, for `Lettermint.Emails.send/3`, `send_batch/3`, `Lettermint.Messages.process/3` and `Lettermint.Messages.resend/4`, `idempotency_key:`. `Lettermint.Operations` lists every API operation with its method, path, token and types.
 
 ### Query parameters and pagination
 
