@@ -3266,7 +3266,7 @@ defmodule Lettermint.Types.MessageData do
     * `spam_symbols` (optional): Detailed rules that contributed to the spam assessment. Available on plans with Spam Insights in individual-message responses
     * `route_id` (required)
     * `created_at` (required)
-    * `resent_from_message_id` (required, nullable): The ID of the message this message resent. Null when it is not a resend
+    * `resent_from_message_id` (optional, nullable): The ID of the message this message resent. Null when it is not a resend
 
   Absent fields are `:unset`; `nil` is JSON `null`. `extra` holds response fields that this version of the SDK does not know.
   """
@@ -3319,7 +3319,7 @@ defmodule Lettermint.Types.MessageData do
           spam_symbols: [Lettermint.Types.SpamSymbol.t()] | :unset,
           route_id: String.t(),
           created_at: String.t(),
-          resent_from_message_id: String.t() | nil,
+          resent_from_message_id: String.t() | nil | :unset,
           extra: %{optional(String.t()) => term()}
         }
 
