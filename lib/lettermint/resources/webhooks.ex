@@ -143,4 +143,19 @@ defmodule Lettermint.Webhooks.Deliveries do
       options: options
     })
   end
+
+  @doc """
+  Sends a delivery's original payload to the webhook again now. The retry counts
+  as a delivery attempt; if it fails with a retryable error, automatic retries
+  continue. A delivery that cannot be retried returns a `Lettermint.ConflictError`.
+  """
+  @spec retry(Client.t(), String.t(), String.t(), keyword()) ::
+          result(Types.RetryWebhookDeliveryResponse.t())
+  def retry(%Client{} = client, webhook_id, delivery_id, options \\ []) do
+    Transport.call(client, "POST /webhooks/{webhookId}/deliveries/{deliveryId}/retry", %{
+      label: "webhooks.deliveries.retry",
+      path: %{"webhookId" => webhook_id, "deliveryId" => delivery_id},
+      options: options
+    })
+  end
 end

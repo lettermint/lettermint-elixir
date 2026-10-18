@@ -314,6 +314,9 @@ project.api_token # the new project's sending token, shown once
 
 # Resend a message as a new message, to every original recipient or only some of them.
 {:ok, resent} = Lettermint.Messages.resend(lettermint, "message-id", %{recipients: ["jane@example.com"]})
+
+# Send a webhook delivery's original payload to the webhook again now.
+{:ok, retry} = Lettermint.Webhooks.Deliveries.retry(lettermint, "webhook-id", "delivery-id")
 ```
 
 | Module | Functions |
@@ -328,7 +331,7 @@ project.api_token # the new project's sending token, shown once
 | `Lettermint.Team` | `retrieve`, `update`, `usage`, `roles` |
 | `Lettermint.Team.Members` | `list`, `iterate`, `retrieve`, `update_assignment` |
 | `Lettermint.Webhooks` | `list`, `iterate`, `create`, `retrieve`, `update`, `delete`, `test`, `regenerate_secret` |
-| `Lettermint.Webhooks.Deliveries` | `list(client, webhook_id)`, `iterate(client, webhook_id)`, `retrieve(client, webhook_id, delivery_id)` |
+| `Lettermint.Webhooks.Deliveries` | `list(client, webhook_id)`, `iterate(client, webhook_id)`, `retrieve(client, webhook_id, delivery_id)`, `retry(client, webhook_id, delivery_id)` |
 | `Lettermint` | `ping`, `analytics`, `analytics_pages`, `blocked_file_types` |
 
 Every function takes the client first and a keyword list of options last: `timeout:` (milliseconds, overrides the client's timeout) and, for `Lettermint.Emails.send/3`, `send_batch/3`, `Lettermint.Messages.process/3` and `Lettermint.Messages.resend/4`, `idempotency_key:`. `Lettermint.Operations` lists every API operation with its method, path, token and types.
