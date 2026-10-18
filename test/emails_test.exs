@@ -271,6 +271,130 @@ defmodule Lettermint.EmailsTest do
       assert {:error, %ClientValidationError{field: "messages"}} =
                Emails.send_batch(sending_client(), %{})
     end
+
+    test "sends a per-email idempotency key next to the per-call header" do
+      client = sending_client(json(202, [%{message_id: "1", status: "pending"}]))
+
+      builder =
+        client
+        |> Emails.compose()
+        |> Email.from("a@x.co")
+        |> Email.to("b@x.co")
+        |> Email.subject("Built")
+        |> Email.idempotency_key("email-3")
+
+      assert {:ok, _} =
+               Emails.send_batch(
+                 client,
+                 [
+                   message(%{idempotency_key: "email-1"}),
+                   %Types.SendBatchMailItem{
+                     from: "a@x.co",
+                     to: ["b@x.co"],
+                     subject: "Struct",
+                     idempotency_key: "email-2"
+                   },
+                   builder,
+                   message(%{"idempotency_key" => nil}),
+                   message()
+                 ],
+                 idempotency_key: "batch-1"
+               )
+
+      assert_receive {:request, request}
+      assert header(request, "idempotency-key") == "batch-1"
+
+      assert [
+               %{"idempotency_key" => "email-1", "subject" => "Hi"},
+               %{"idempotency_key" => "email-2", "subject" => "Struct"} = struct,
+               %{"idempotency_key" => "email-3", "subject" => "Built"},
+               fourth,
+               fifth
+             ] = body(request)
+
+      refute Map.has_key?(struct, "html")
+      refute Map.has_key?(fourth, "idempotency_key")
+      refute Map.has_key?(fifth, "idempotency_key")
+      assert builder.idempotency_key == "email-3"
+      refute Map.has_key?(Email.build(builder), "idempotency_key")
+
+      assert {:ok, _} = Emails.send_batch(client, [Email.idempotency_key(builder, nil)])
+      assert_receive {:request, request}
+      assert [item] = body(request)
+      refute Map.has_key?(item, "idempotency_key")
+    end
+
+    test "per-email idempotency keys are 1 to 255 characters and unique within the batch" do
+      client = sending_client()
+
+      assert {:error, %ClientValidationError{field: "messages[1].idempotency_key"} = error} =
+               Emails.send_batch(client, [
+                 message(%{idempotency_key: "same"}),
+                 message(%{idempotency_key: "same"})
+               ])
+
+      assert error.message =~ "unique within the batch"
+
+      for key <- ["", String.duplicate("k", 256), 42] do
+        assert {:error, %ClientValidationError{field: "messages[0].idempotency_key"}} =
+                 Emails.send_batch(client, [message(%{idempotency_key: key})])
+      end
+
+      assert {:ok, _} =
+               Emails.send_batch(
+                 sending_client(json(202, [])),
+                 [message(%{idempotency_key: String.duplicate("é", 255)})]
+               )
+
+      assert_receive {:request, _}
+
+      assert_raise ClientValidationError, ~r/1 to 255 characters/, fn ->
+        client |> Emails.compose() |> Email.idempotency_key("")
+      end
+
+      refute_received {:request, _}
+    end
+
+    test "a batch error lists the emails accepted before it in details" do
+      conflict = %{error: %{code: "IDEMPOTENCY_CONFLICT", message: "Conflict", details: %{}}}
+
+      assert {:error, %Lettermint.ConflictError{status: 409, code: "IDEMPOTENCY_CONFLICT"}} =
+               Emails.send_batch(sending_client(json(409, conflict)), [message()])
+
+      partial = %{
+        error: %{
+          code: "INVALID_SCHEDULE",
+          message: "Invalid schedule",
+          details: %{accepted: [%{index: 0, message_id: "m0"}]}
+        }
+      }
+
+      assert {:error, %Lettermint.ValidationError{status: 422} = error} =
+               Emails.send_batch(sending_client(json(422, partial)), [message(), message()])
+
+      assert error.details["accepted"] == [%{"index" => 0, "message_id" => "m0"}]
+    end
+
+    test "single sends keep a message's fields as they are and leave out a builder's per-email key" do
+      client = sending_client()
+
+      # A message map is sent as given, as before per-email keys existed.
+      for key <- ["k", "", nil] do
+        assert {:ok, _} = Emails.send(client, message(%{idempotency_key: key}))
+        assert_receive {:request, request}
+        assert body(request)["idempotency_key"] == key
+      end
+
+      assert {:ok, _} =
+               client
+               |> Emails.compose(message())
+               |> Email.idempotency_key("batch-only")
+               |> Email.send(idempotency_key: "single")
+
+      assert_receive {:request, request}
+      assert header(request, "idempotency-key") == "single"
+      refute Map.has_key?(body(request), "idempotency_key")
+    end
   end
 
   describe "the builder" do

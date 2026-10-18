@@ -20,6 +20,13 @@ defmodule Lettermint.Emails do
   `Lettermint.Types.SendMailRequest` struct. For the pipe-friendly builder,
   see `compose/2` and `Lettermint.EmailBuilder`.
 
+  ## Idempotency
+
+  The `:idempotency_key` option (the `Idempotency-Key` header) applies to the
+  whole request. In `send_batch/3`, each email can also have its own
+  `idempotency_key` field, so that a retried batch sends only the emails that
+  were not accepted yet; see `send_batch/3`.
+
   ## Attachments
 
   An attachment is a map with `:filename`, `:content`, and optionally
@@ -52,6 +59,12 @@ defmodule Lettermint.Emails do
   @typedoc "An email: a map in the API's field names, or a `SendMailRequest` struct."
   @type message :: map() | Types.SendMailRequest.t()
 
+  @typedoc """
+  An email of a batch: a `t:message/0` or a `Lettermint.Types.SendBatchMailItem`
+  struct, optionally with a per-email `idempotency_key` field.
+  """
+  @type batch_message :: message() | Types.SendBatchMailItem.t()
+
   @typedoc "`:idempotency_key` (sent as `Idempotency-Key`) and `:timeout` (milliseconds)."
   @type send_options :: [idempotency_key: String.t(), timeout: pos_integer()]
 
@@ -80,8 +93,27 @@ defmodule Lettermint.Emails do
   @doc """
   Sends up to 500 emails in one request. The list may mix messages and
   builders. Takes the options of `send/3`.
+
+  Each email can have its own `idempotency_key` (1 to 255 characters, unique
+  within the batch): set the field on a message, or use
+  `Lettermint.EmailBuilder.idempotency_key/2`. A `nil` key counts as no key.
+  If an email with the same key and content was accepted in the last 24 hours,
+  the API returns its original result and does not send it again. Reusing a key with different content, or
+  while the email with that key is still being processed, rejects the whole
+  batch with `Lettermint.ConflictError` (code `IDEMPOTENCY_CONFLICT`) and sends
+  nothing.
+
+  Emails are accepted in order. When one fails, the emails before it may
+  already be accepted; the error's `details["accepted"]` then lists them, each
+  with its `"index"` in the batch and its `"message_id"`. Retry the batch with
+  the same per-email keys to send only the rest.
+
+      Lettermint.Emails.send_batch(lettermint, [
+        %{from: "hello@acme.com", to: ["jane@example.com"], subject: "Hi", text: "…", idempotency_key: "order-1"},
+        %{from: "hello@acme.com", to: ["john@example.com"], subject: "Hi", text: "…", idempotency_key: "order-2"}
+      ])
   """
-  @spec send_batch(Client.t(), [message() | EmailBuilder.t()], send_options()) ::
+  @spec send_batch(Client.t(), [batch_message() | EmailBuilder.t()], send_options()) ::
           {:ok, Types.SendBatchMailResponse.t()} | {:error, Lettermint.Error.t()}
   def send_batch(%Client{} = client, messages, options \\ []) do
     Transport.assert_auth(client, "POST /send/batch", "emails.send_batch", :sending)
@@ -135,12 +167,19 @@ defmodule Lettermint.Emails do
     |> Enum.reduce_while({:ok, []}, fn {item, index}, {:ok, acc} ->
       result =
         case item do
-          %EmailBuilder{message: draft} -> {:ok, wire(draft)}
+          %EmailBuilder{message: draft, idempotency_key: nil} -> {:ok, wire(draft)}
+          %EmailBuilder{message: draft, idempotency_key: key} -> {:ok, put_item_key(draft, key)}
           message -> prepare(message, "messages[#{index}]")
         end
 
-      case result do
-        {:ok, wire} -> {:cont, {:ok, [wire | acc]}}
+      field = "messages[#{index}].idempotency_key"
+
+      with {:ok, wire} <- result,
+           wire = drop_nil_item_key(wire),
+           :ok <- validate_item_key(Map.get(wire, "idempotency_key", :unset), field),
+           :ok <- unique_item_key(wire, acc, field) do
+        {:cont, {:ok, [wire | acc]}}
+      else
         error -> {:halt, error}
       end
     end)
@@ -158,6 +197,35 @@ defmodule Lettermint.Emails do
          message: "send_batch/3 takes a list of messages."
        }}
 
+  defp put_item_key(draft, key), do: draft |> wire() |> Map.put("idempotency_key", key)
+
+  defp drop_nil_item_key(%{"idempotency_key" => nil} = wire),
+    do: Map.delete(wire, "idempotency_key")
+
+  defp drop_nil_item_key(wire), do: wire
+
+  defp unique_item_key(%{"idempotency_key" => key}, previous, field) do
+    check(
+      not Enum.any?(previous, &(Map.get(&1, "idempotency_key") == key)),
+      field,
+      "The idempotency_key of each email must be unique within the batch."
+    )
+  end
+
+  defp unique_item_key(_wire, _previous, _field), do: :ok
+
+  @doc false
+  # The per-email idempotency key of a batch email: a string of 1 to 255 characters.
+  def validate_item_key(:unset, _field), do: :ok
+
+  def validate_item_key(key, field) do
+    check(
+      is_binary(key) and String.length(key) in 1..255,
+      field,
+      "The idempotency_key of an email must be a string of 1 to 255 characters."
+    )
+  end
+
   # A message in wire format with binary attachment content base64-encoded.
   defp prepare(message, prefix) do
     with {:ok, draft} <- prepare_draft(message, prefix), do: {:ok, wire(draft)}
@@ -166,6 +234,9 @@ defmodule Lettermint.Emails do
   @doc false
   # Normalizes a message to string keys and validates it; attachment content may still be {:bytes, binary}.
   def prepare_draft(%Types.SendMailRequest{} = message, prefix),
+    do: message |> Types.to_map() |> prepare_draft(prefix)
+
+  def prepare_draft(%Types.SendBatchMailItem{} = message, prefix),
     do: message |> Types.to_map() |> prepare_draft(prefix)
 
   def prepare_draft(message, prefix) when is_map(message) and not is_struct(message) do
@@ -181,7 +252,8 @@ defmodule Lettermint.Emails do
     {:error,
      %ClientValidationError{
        field: if(prefix == "", do: "message", else: prefix),
-       message: "An email message must be a map or a Lettermint.Types.SendMailRequest."
+       message:
+         "An email message must be a map, a Lettermint.Types.SendMailRequest or a Lettermint.Types.SendBatchMailItem."
      }}
   end
 

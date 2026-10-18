@@ -198,6 +198,7 @@ email |> Email.subject("Your invoice") |> Email.html(invoice_html) |> Email.send
 | `settings(builder, %{track_opens: ..., track_clicks: ..., tls: ...})` | Per-email settings that override the route. |
 | `sandbox_result(builder, result)` | The result a Sandbox project simulates. |
 | `attach(builder, filename: ..., content: ..., content_type: ..., content_id: ...)` | Adds an attachment. |
+| `idempotency_key(builder, key \| nil)` | A per-email idempotency key for `send_batch/3` (see [Batch sending](#batch-sending)). Applies only in batches: `send/2` leaves it out. |
 | `send(builder, options \\ [])` | Sends a snapshot of the email. The builder can be sent again. |
 | `build(builder)` | Returns the message in the API's wire format. |
 
@@ -215,6 +216,15 @@ Send up to 500 emails in one request. The list may mix messages and builders:
   ])
 ```
 
+Give each email its own `idempotency_key` (1 to 255 characters, unique within the batch) to retry a batch safely. An email whose key and content were accepted in the last 24 hours is not sent again; the API returns its original result. Reusing a key with different content rejects the whole batch with `Lettermint.ConflictError` and sends nothing. When an email fails, the emails before it may already be accepted: the error's `details["accepted"]` lists them by `"index"` and `"message_id"`, and a retry with the same keys sends only the rest.
+
+```elixir
+Lettermint.Emails.send_batch(lettermint, [
+  %{from: "hello@acme.com", to: ["jane@example.com"], subject: "Your order", text: "…", idempotency_key: "order-1001"},
+  order_email |> Email.to("john@example.com") |> Email.idempotency_key("order-1002")
+])
+```
+
 ### Idempotency
 
 Pass an idempotency key to make retries safe. The API processes a key once, so a retry with the same key does not send the email again. The key applies only to the call it is passed to.
@@ -224,6 +234,8 @@ Lettermint.Emails.send(lettermint, message, idempotency_key: "order-#{order.id}-
 Email.send(builder, idempotency_key: "welcome-jane")
 Lettermint.Emails.send_batch(lettermint, messages, idempotency_key: "newsletter-2026-10")
 ```
+
+The per-email `idempotency_key` of a batch email is separate from this option and applies only in `send_batch/3`; see [Batch sending](#batch-sending).
 
 ### Scheduling
 

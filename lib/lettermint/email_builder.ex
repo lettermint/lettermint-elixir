@@ -30,9 +30,13 @@ defmodule Lettermint.EmailBuilder do
   alias Lettermint.{ClientValidationError, Emails}
 
   @enforce_keys [:client]
-  defstruct [:client, message: %{}]
+  defstruct [:client, message: %{}, idempotency_key: nil]
 
-  @type t :: %__MODULE__{client: Lettermint.Client.t(), message: map()}
+  @type t :: %__MODULE__{
+          client: Lettermint.Client.t(),
+          message: map(),
+          idempotency_key: String.t() | nil
+        }
 
   @typedoc "An attachment: `content` is base64 text or `{:bytes, binary}`."
   @type attachment :: %{
@@ -129,6 +133,27 @@ defmodule Lettermint.EmailBuilder do
     do: put(builder, "sandbox_result", result)
 
   @doc """
+  A per-email idempotency key (1 to 255 characters) for
+  `Lettermint.Emails.send_batch/3`. `nil` removes it. Keys must be unique
+  within a batch. The key applies only in batches: `send/2` does not send it,
+  so pass `idempotency_key:` as an option of `send/2` for a single email.
+
+      Lettermint.Emails.send_batch(lettermint, [
+        welcome |> Email.to("jane@example.com") |> Email.idempotency_key("welcome-jane"),
+        welcome |> Email.to("john@example.com") |> Email.idempotency_key("welcome-john")
+      ])
+  """
+  @spec idempotency_key(t(), String.t() | nil) :: t()
+  def idempotency_key(%__MODULE__{} = builder, nil), do: %{builder | idempotency_key: nil}
+
+  def idempotency_key(%__MODULE__{} = builder, key) when is_binary(key) do
+    case Emails.validate_item_key(key, "idempotency_key") do
+      :ok -> %{builder | idempotency_key: key}
+      {:error, error} -> raise error
+    end
+  end
+
+  @doc """
   Adds an attachment: a map or keyword list with `:filename`, `:content`, and
   optionally `:content_type` (a MIME type, detected by the API when left out)
   and `:content_id` (for inline images referenced as `cid:<content_id>`).
@@ -165,7 +190,8 @@ defmodule Lettermint.EmailBuilder do
 
   @doc """
   The message in the API's wire format (string keys), with attachment bytes
-  base64-encoded. Contains no credentials.
+  base64-encoded, as `send/2` sends it: without the per-email
+  `idempotency_key/2`. Contains no credentials.
   """
   @spec build(t()) :: map()
   def build(%__MODULE__{message: message}), do: Emails.wire(message)
