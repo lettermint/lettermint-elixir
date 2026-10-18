@@ -389,6 +389,75 @@ defmodule Lettermint.TransportTest do
       assert header(request, "idempotency-key") == "p-1"
       assert request.body == nil
     end
+
+    test "messages.resend posts the optional recipients and an idempotency key" do
+      client = team_client(json(202, %{message_id: "m2", status: "pending", future: 1}))
+
+      assert {:ok,
+              %Types.PendingSendMailResponse{
+                message_id: "m2",
+                status: "pending",
+                extra: %{"future" => 1}
+              }} = Lettermint.Messages.resend(client, "m 1")
+
+      assert_receive {:request, request}
+      assert request.method == :post
+      assert path(request) == "/v1/messages/m%201/resend"
+      assert header(request, "authorization") == "Bearer " <> team_token()
+      assert header(request, "content-type") == "application/json"
+      assert header(request, "idempotency-key") == nil
+      assert Jason.decode!(request.body) == %{}
+
+      assert {:ok, %Types.PendingSendMailResponse{}} =
+               Lettermint.Messages.resend(
+                 client,
+                 "m",
+                 %Types.ResendMessageRequest{recipients: ["jane@example.com"]},
+                 idempotency_key: "r-1",
+                 timeout: 5_000
+               )
+
+      assert_receive {:request, request}
+      assert request.timeout == 5_000
+      assert header(request, "idempotency-key") == "r-1"
+      assert Jason.decode!(request.body) == %{"recipients" => ["jane@example.com"]}
+
+      assert {:ok, _} =
+               Lettermint.Messages.resend(client, "m", %{recipients: ["a@x.co", "b@x.co"]})
+
+      assert_receive {:request, request}
+      assert Jason.decode!(request.body) == %{"recipients" => ["a@x.co", "b@x.co"]}
+
+      assert {:ok, _} = Lettermint.Messages.resend(client, "m", %Types.ResendMessageRequest{})
+      assert_receive {:request, request}
+      assert Jason.decode!(request.body) == %{}
+    end
+
+    test "messages.resend validates its arguments before sending" do
+      assert_raise Lettermint.ConfigError, ~r/messages.resend: the body must be a map/, fn ->
+        Lettermint.Messages.resend(team_client(), "m", idempotency_key: "k")
+      end
+
+      assert_raise Lettermint.ConfigError, ~r/messages.resend: messageId must be/, fn ->
+        Lettermint.Messages.resend(team_client(), "")
+      end
+
+      assert {:error, %Lettermint.ClientValidationError{field: "idempotency_key"}} =
+               Lettermint.Messages.resend(team_client(), "m", %{}, idempotency_key: "a\nb")
+
+      refute_received {:request, _}
+    end
+
+    test "messages.resend maps 410 to an APIError" do
+      body = %{error: %{code: "MESSAGE_CONTENT_UNAVAILABLE", message: "Gone", details: %{}}}
+
+      assert {:error,
+              %Lettermint.APIError{status: 410, code: "MESSAGE_CONTENT_UNAVAILABLE"} = error} =
+               Lettermint.Messages.resend(team_client(json(410, body)), "m")
+
+      assert error.message == "Gone"
+      assert Lettermint.Error.is_api_error(error)
+    end
   end
 
   describe "pagination" do

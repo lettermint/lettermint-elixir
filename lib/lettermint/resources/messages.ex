@@ -1,7 +1,7 @@
 defmodule Lettermint.Messages do
   @moduledoc """
-  Sent and received messages. Needs `:team_token`; `reschedule/4` and
-  `cancel/3` also accept the sending token when no team token is configured.
+  Sent and received messages. Needs `:team_token`; `reschedule/4`, `cancel/3`
+  and `resend/4` also accept the sending token when no team token is configured.
 
   Every function takes the options `timeout:` (milliseconds) last.
   """
@@ -131,6 +131,38 @@ defmodule Lettermint.Messages do
     Transport.call(client, "POST /messages/{messageId}/process", %{
       label: "messages.process",
       path: %{"messageId" => message_id},
+      options: options,
+      idempotent: true
+    })
+  end
+
+  @doc """
+  Sends the stored content of a message again, as a new message with its own
+  ID that links to the original through `resent_from_message_id`. Uses the
+  team token when configured, otherwise the sending token.
+
+  `body`: `t:Lettermint.Types.ResendMessageRequest.t/0`. Pass `%{recipients: [...]}`
+  to resend to some of the original recipients only; omit it to resend to all
+  of them. Options: `:idempotency_key` and `:timeout`.
+
+  A message can be resent while its content is retained (otherwise
+  `Lettermint.APIError` with status `410`), and at most 5 times in 24 hours
+  (otherwise `Lettermint.RateLimitError`).
+  """
+  @spec resend(Client.t(), String.t(), Types.ResendMessageRequest.t() | map(), keyword()) ::
+          result(Types.PendingSendMailResponse.t())
+  def resend(client, message_id, body \\ %{}, options \\ [])
+
+  def resend(%Client{}, _message_id, body, _options) when is_list(body) do
+    raise Lettermint.ConfigError,
+          "messages.resend: the body must be a map, for example %{recipients: [\"jane@example.com\"]}; pass options such as :idempotency_key in the last argument."
+  end
+
+  def resend(%Client{} = client, message_id, body, options) do
+    Transport.call(client, "POST /messages/{messageId}/resend", %{
+      label: "messages.resend",
+      path: %{"messageId" => message_id},
+      body: body,
       options: options,
       idempotent: true
     })

@@ -198,7 +198,7 @@ defmodule Lettermint.ClientTest do
       refute_received {:request, _}
     end
 
-    test "ping, reschedule and cancel use the team token when set, otherwise the sending token" do
+    test "ping, reschedule, cancel and resend use the team token when set, otherwise the sending token" do
       pong = raw(200, "pong\n", [{"content-type", "text/html; charset=UTF-8"}])
       scheduled = json(200, %{message_id: "m", status: "canceled", scheduled_at: nil})
 
@@ -223,6 +223,9 @@ defmodule Lettermint.ClientTest do
         assert_receive {:request, request}
         assert header(request, header) == value
         assert {:ok, _} = Lettermint.Messages.reschedule(client, "m", %{scheduled_at: "tomorrow"})
+        assert_receive {:request, request}
+        assert header(request, header) == value
+        assert {:ok, _} = Lettermint.Messages.resend(client, "m")
         assert_receive {:request, request}
         assert header(request, header) == value
       end

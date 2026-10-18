@@ -42,6 +42,7 @@ defmodule Lettermint.TeamAPITest do
        &Messages.reschedule(&1, "id1", %{scheduled_at: "tomorrow"})},
       {"POST /messages/{messageId}/cancel", &Messages.cancel(&1, "id1")},
       {"POST /messages/{messageId}/process", &Messages.process(&1, "id1")},
+      {"POST /messages/{messageId}/resend", &Messages.resend(&1, "id1")},
       {"GET /projects", &Projects.list(&1)},
       {"POST /projects", &Projects.create(&1, %{name: "P"})},
       {"GET /projects/{projectId}", &Projects.retrieve(&1, "id1")},
@@ -162,7 +163,8 @@ defmodule Lettermint.TeamAPITest do
     assert Enum.sort(either) == [
              "GET /ping",
              "PATCH /messages/{messageId}",
-             "POST /messages/{messageId}/cancel"
+             "POST /messages/{messageId}/cancel",
+             "POST /messages/{messageId}/resend"
            ]
   end
 
