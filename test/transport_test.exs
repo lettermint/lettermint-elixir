@@ -458,6 +458,86 @@ defmodule Lettermint.TransportTest do
       assert error.message == "Gone"
       assert Lettermint.Error.is_api_error(error)
     end
+
+    test "webhooks.deliveries.retry posts without a body and decodes the 202" do
+      client = team_client(json(202, %{message: "Retry queued", delivery_id: "d 1", future: 1}))
+
+      assert {:ok,
+              %Types.RetryWebhookDeliveryResponse{
+                message: "Retry queued",
+                delivery_id: "d 1",
+                extra: %{"future" => 1}
+              }} = Lettermint.Webhooks.Deliveries.retry(client, "w 1", "d 1", timeout: 5_000)
+
+      assert_receive {:request, request}
+      assert request.method == :post
+      assert path(request) == "/v1/webhooks/w%201/deliveries/d%201/retry"
+      assert header(request, "authorization") == "Bearer " <> team_token()
+      assert header(request, "x-lettermint-token") == nil
+      assert header(request, "idempotency-key") == nil
+      assert request.body == nil
+      assert request.timeout == 5_000
+    end
+
+    test "webhooks.deliveries.retry validates its path parameters and needs the team token" do
+      assert_raise Lettermint.ConfigError, ~r/webhooks.deliveries.retry: webhookId/, fn ->
+        Lettermint.Webhooks.Deliveries.retry(team_client(), "", "d")
+      end
+
+      assert_raise Lettermint.ConfigError, ~r/webhooks.deliveries.retry: deliveryId/, fn ->
+        Lettermint.Webhooks.Deliveries.retry(team_client(), "w", "..")
+      end
+
+      assert_raise Lettermint.ConfigError, ~r/webhooks.deliveries.retry needs :team_token/, fn ->
+        Lettermint.Webhooks.Deliveries.retry(sending_client(), "w", "d")
+      end
+
+      refute_received {:request, _}
+    end
+
+    test "webhooks.deliveries.retry maps 409 to a ConflictError with the code" do
+      body = %{
+        error: %{
+          code: "WEBHOOK_DELIVERY_NOT_RETRYABLE",
+          message: "This delivery cannot be retried.",
+          details: %{}
+        }
+      }
+
+      assert {:error,
+              %Lettermint.ConflictError{status: 409, code: "WEBHOOK_DELIVERY_NOT_RETRYABLE"} =
+                error} =
+               Lettermint.Webhooks.Deliveries.retry(team_client(json(409, body)), "w", "d")
+
+      assert error.message == "This delivery cannot be retried."
+      assert Lettermint.Error.is_api_error(error)
+    end
+
+    test "webhook deliveries decode next_retry_at as a value, nil or :unset" do
+      delivery = %{id: "d", status: "failed", next_retry_at: "2026-10-18T12:00:00Z"}
+
+      assert {:ok, %Types.WebhookDeliveryData{next_retry_at: "2026-10-18T12:00:00Z"}} =
+               Lettermint.Webhooks.Deliveries.retrieve(team_client(json(200, delivery)), "w", "d")
+
+      assert {:ok, %Types.WebhookDeliveryData{next_retry_at: nil}} =
+               Lettermint.Webhooks.Deliveries.retrieve(
+                 team_client(json(200, %{delivery | next_retry_at: nil})),
+                 "w",
+                 "d"
+               )
+
+      assert {:ok, %Types.WebhookDeliveryData{next_retry_at: :unset}} =
+               Lettermint.Webhooks.Deliveries.retrieve(
+                 team_client(json(200, Map.delete(delivery, :next_retry_at))),
+                 "w",
+                 "d"
+               )
+
+      page = %{data: [%{id: "d", next_retry_at: nil}], next_cursor: nil}
+
+      assert {:ok, %{data: [%Types.WebhookDeliveryListData{next_retry_at: nil}]}} =
+               Lettermint.Webhooks.Deliveries.list(team_client(json(200, page)), "w")
+    end
   end
 
   describe "pagination" do

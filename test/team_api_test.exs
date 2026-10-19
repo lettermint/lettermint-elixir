@@ -86,7 +86,9 @@ defmodule Lettermint.TeamAPITest do
       {"POST /webhooks/{webhookId}/regenerate-secret", &Webhooks.regenerate_secret(&1, "id1")},
       {"GET /webhooks/{webhookId}/deliveries", &Webhooks.Deliveries.list(&1, "id1")},
       {"GET /webhooks/{webhookId}/deliveries/{deliveryId}",
-       &Webhooks.Deliveries.retrieve(&1, "id1", "id2")}
+       &Webhooks.Deliveries.retrieve(&1, "id1", "id2")},
+      {"POST /webhooks/{webhookId}/deliveries/{deliveryId}/retry",
+       &Webhooks.Deliveries.retry(&1, "id1", "id2")}
     ]
   end
 
