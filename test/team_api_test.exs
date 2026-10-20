@@ -73,6 +73,12 @@ defmodule Lettermint.TeamAPITest do
       {"PUT /team", &Team.update(&1, %{name: "T"})},
       {"GET /team/usage", &Team.usage(&1)},
       {"GET /team/roles", &Team.roles(&1)},
+      {"GET /team/roles/{roleId}", &Team.retrieve_role(&1, "id1")},
+      {"POST /team/roles", &Team.create_role(&1, %{name: "R", permissions: ["members:read"]})},
+      {"PUT /team/roles/{roleId}",
+       &Team.update_role(&1, "id1", %{name: "R", permissions: ["members:read"]})},
+      {"DELETE /team/roles/{roleId}", &Team.delete_role(&1, "id1")},
+      {"POST /team/roles/{roleId}/duplicate", &Team.duplicate_role(&1, "id1", %{name: "R"})},
       {"GET /team/members", &Team.Members.list(&1)},
       {"GET /team/members/{userId}", &Team.Members.retrieve(&1, "id1")},
       {"PUT /team/members/{userId}/assignment",
@@ -106,11 +112,6 @@ defmodule Lettermint.TeamAPITest do
   # Operations of the generated table that have no public function yet: they are
   # added by the next PRs in this stack. Every other operation is checked strictly.
   @pending [
-    "GET /team/roles/{roleId}",
-    "POST /team/roles",
-    "PUT /team/roles/{roleId}",
-    "DELETE /team/roles/{roleId}",
-    "POST /team/roles/{roleId}/duplicate",
     "DELETE /team/members/{userId}"
   ]
 
