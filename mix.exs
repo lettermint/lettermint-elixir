@@ -58,6 +58,7 @@ defmodule Lettermint.MixProject do
           Lettermint.Suppressions,
           Lettermint.Team,
           Lettermint.Team.Members,
+          Lettermint.Team.Invites,
           Lettermint.Webhooks,
           Lettermint.Webhooks.Deliveries
         ],

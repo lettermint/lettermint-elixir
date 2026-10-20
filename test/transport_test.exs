@@ -540,6 +540,209 @@ defmodule Lettermint.TransportTest do
     end
   end
 
+  describe "team invites" do
+    defp invite(overrides \\ %{}) do
+      Map.merge(
+        %{
+          id: "i 1",
+          email: "jane@example.com",
+          role: %{id: "r1", name: "Developer"},
+          project_access: %{scope: "selected", projects: [%{id: "p1", name: "Production"}]},
+          created_at: "2026-10-20T09:00:00Z"
+        },
+        overrides
+      )
+    end
+
+    test "team.invites.create posts the invite and decodes the 201" do
+      client = team_client(json(201, invite(%{future: 1})))
+
+      assert {:ok,
+              %Types.TeamInviteData{
+                id: "i 1",
+                email: "jane@example.com",
+                role: %Types.TeamInviteDataRole{id: "r1", name: "Developer"},
+                project_access: %Types.TeamMemberProjectAccessData{
+                  scope: "selected",
+                  projects: [%Types.TeamMemberProjectAccessDataProjectsItem{id: "p1"}]
+                },
+                created_at: "2026-10-20T09:00:00Z",
+                extra: %{"future" => 1}
+              }} =
+               Lettermint.Team.Invites.create(
+                 client,
+                 %Types.CreateTeamInviteData{
+                   email: "jane@example.com",
+                   role_id: "r1",
+                   project_access: %Types.CreateTeamInviteDataProjectAccess{
+                     scope: "selected",
+                     project_ids: ["p1"]
+                   }
+                 },
+                 timeout: 5_000
+               )
+
+      assert_receive {:request, request}
+      assert request.method == :post
+      assert path(request) == "/v1/team/invites"
+      assert header(request, "authorization") == "Bearer " <> team_token()
+      assert header(request, "x-lettermint-token") == nil
+      assert header(request, "idempotency-key") == nil
+      assert header(request, "content-type") == "application/json"
+      assert request.timeout == 5_000
+
+      assert Jason.decode!(request.body) == %{
+               "email" => "jane@example.com",
+               "role_id" => "r1",
+               "project_access" => %{"scope" => "selected", "project_ids" => ["p1"]}
+             }
+
+      assert {:ok, %Types.TeamInviteData{}} =
+               Lettermint.Team.Invites.create(client, %{
+                 email: "jane@example.com",
+                 role_id: "r1",
+                 project_access: %{scope: "all"}
+               })
+
+      assert_receive {:request, request}
+
+      assert Jason.decode!(request.body) == %{
+               "email" => "jane@example.com",
+               "role_id" => "r1",
+               "project_access" => %{"scope" => "all"}
+             }
+    end
+
+    test "team.invites.update puts the replacement and decodes the invite" do
+      client = team_client(json(200, invite(%{email: "john@example.com"})))
+
+      assert {:ok, %Types.TeamInviteData{id: "i 1", email: "john@example.com"}} =
+               Lettermint.Team.Invites.update(client, "i 1", %Types.UpdateTeamInviteData{
+                 email: "john@example.com",
+                 role_id: "r2",
+                 project_access: %Types.UpdateTeamInviteDataProjectAccess{scope: "all"}
+               })
+
+      assert_receive {:request, request}
+      assert request.method == :put
+      assert path(request) == "/v1/team/invites/i%201"
+      assert header(request, "authorization") == "Bearer " <> team_token()
+
+      assert Jason.decode!(request.body) == %{
+               "email" => "john@example.com",
+               "role_id" => "r2",
+               "project_access" => %{"scope" => "all"}
+             }
+    end
+
+    test "team.invites list, retrieve and revoke" do
+      client = team_client(json(200, %{data: [invite()], next_cursor: "c2"}))
+
+      assert {:ok, %Types.CursorPage{data: [%Types.TeamInviteData{id: "i 1"}], next_cursor: "c2"}} =
+               Lettermint.Team.Invites.list(client, %{page: %{size: 10, cursor: "c1"}})
+
+      assert_receive {:request, request}
+      assert request.method == :get
+      assert path(request) == "/v1/team/invites"
+
+      assert URI.decode_query(query(request)) == %{
+               "page[size]" => "10",
+               "page[cursor]" => "c1"
+             }
+
+      assert header(request, "authorization") == "Bearer " <> team_token()
+
+      assert {:ok, %Types.TeamInviteData{id: "i 1", role: %Types.TeamInviteDataRole{}}} =
+               Lettermint.Team.Invites.retrieve(team_client(json(200, invite())), "i 1")
+
+      assert_receive {:request, request}
+      assert request.method == :get
+      assert path(request) == "/v1/team/invites/i%201"
+      assert request.body == nil
+
+      assert {:ok, %Types.MessageResponse{message: "Invite revoked."}} =
+               Lettermint.Team.Invites.revoke(
+                 team_client(json(200, %{message: "Invite revoked."})),
+                 "i 1"
+               )
+
+      assert_receive {:request, request}
+      assert request.method == :delete
+      assert path(request) == "/v1/team/invites/i%201"
+      assert header(request, "authorization") == "Bearer " <> team_token()
+      assert request.body == nil
+    end
+
+    test "team.invites.iterate follows page[cursor]" do
+      client =
+        team_client(fn request ->
+          case URI.decode_query(query(request) || "") do
+            %{"page[cursor]" => "c2"} ->
+              json(200, %{data: [invite(%{id: "i2"})], next_cursor: nil})
+
+            _ ->
+              json(200, %{data: [invite(%{id: "i1"})], next_cursor: "c2"})
+          end
+        end)
+
+      assert Enum.map(Lettermint.Team.Invites.iterate(client, %{page: %{size: 1}}), & &1.id) ==
+               ["i1", "i2"]
+
+      assert_receive {:request, first}
+      assert path(first) == "/v1/team/invites"
+      assert URI.decode_query(query(first)) == %{"page[size]" => "1"}
+      assert_receive {:request, second}
+      assert URI.decode_query(query(second)) == %{"page[size]" => "1", "page[cursor]" => "c2"}
+    end
+
+    test "team.invites validates its path parameters and needs the team token" do
+      assert_raise Lettermint.ConfigError, ~r/team.invites.retrieve: inviteId/, fn ->
+        Lettermint.Team.Invites.retrieve(team_client(), "")
+      end
+
+      assert_raise Lettermint.ConfigError, ~r/team.invites.update: inviteId/, fn ->
+        Lettermint.Team.Invites.update(team_client(), "..", %{})
+      end
+
+      assert_raise Lettermint.ConfigError, ~r/team.invites.revoke: inviteId/, fn ->
+        Lettermint.Team.Invites.revoke(team_client(), ".")
+      end
+
+      assert_raise Lettermint.ConfigError, ~r/team.invites.create needs :team_token/, fn ->
+        Lettermint.Team.Invites.create(sending_client(), %{})
+      end
+
+      assert_raise Lettermint.ConfigError, ~r/team.invites.list needs :team_token/, fn ->
+        Lettermint.Team.Invites.list(sending_client())
+      end
+
+      refute_received {:request, _}
+    end
+
+    test "team.invites maps 409 to a ConflictError and 422 to a ValidationError" do
+      conflict = %{
+        error: %{code: "stale_resource", message: "The invite was changed in the meantime."}
+      }
+
+      assert {:error, %Lettermint.ConflictError{status: 409, code: "stale_resource"} = error} =
+               Lettermint.Team.Invites.create(team_client(json(409, conflict)), %{})
+
+      assert error.message == "The invite was changed in the meantime."
+      assert Lettermint.Error.is_api_error(error)
+
+      invalid = %{
+        message: "The email field must be a valid email address.",
+        errors: %{email: ["The email field must be a valid email address."]}
+      }
+
+      assert {:error,
+              %Lettermint.ValidationError{
+                status: 422,
+                errors: %{"email" => ["The email field must be a valid email address."]}
+              }} = Lettermint.Team.Invites.update(team_client(json(422, invalid)), "i", %{})
+    end
+  end
+
   describe "pagination" do
     defp pages(pages) do
       fn request ->

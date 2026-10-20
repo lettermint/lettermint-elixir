@@ -317,6 +317,14 @@ project.api_token # the new project's sending token, shown once
 
 # Send a webhook delivery's original payload to the webhook again now.
 {:ok, retry} = Lettermint.Webhooks.Deliveries.retry(lettermint, "webhook-id", "delivery-id")
+
+# Invite a person to the team, with access to all projects.
+{:ok, invite} =
+  Lettermint.Team.Invites.create(lettermint, %{
+    email: "jane@example.com",
+    role_id: "role-id",
+    project_access: %{scope: "all"}
+  })
 ```
 
 | Module | Functions |
@@ -330,6 +338,7 @@ project.api_token # the new project's sending token, shown once
 | `Lettermint.Suppressions` | `list`, `iterate`, `create`, `delete` |
 | `Lettermint.Team` | `retrieve`, `update`, `usage`, `roles` |
 | `Lettermint.Team.Members` | `list`, `iterate`, `retrieve`, `update_assignment` |
+| `Lettermint.Team.Invites` | `list`, `iterate`, `retrieve`, `create`, `update`, `revoke` |
 | `Lettermint.Webhooks` | `list`, `iterate`, `create`, `retrieve`, `update`, `delete`, `test`, `regenerate_secret` |
 | `Lettermint.Webhooks.Deliveries` | `list(client, webhook_id)`, `iterate(client, webhook_id)`, `retrieve(client, webhook_id, delivery_id)`, `retry(client, webhook_id, delivery_id)` |
 | `Lettermint` | `ping`, `analytics`, `analytics_pages`, `blocked_file_types` |

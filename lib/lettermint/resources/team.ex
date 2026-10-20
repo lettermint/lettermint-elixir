@@ -79,7 +79,7 @@ end
 defmodule Lettermint.Team do
   @moduledoc """
   The team of the token. Needs `:team_token`. Members are in
-  `Lettermint.Team.Members`.
+  `Lettermint.Team.Members`, pending invitations in `Lettermint.Team.Invites`.
 
   Every function takes the options `timeout:` (milliseconds) last.
   """
@@ -170,6 +170,89 @@ defmodule Lettermint.Team.Members do
       label: "team.members.update_assignment",
       path: %{"userId" => user_id},
       body: body,
+      options: options
+    })
+  end
+end
+
+defmodule Lettermint.Team.Invites do
+  @moduledoc """
+  Pending team invitations. Needs `:team_token`.
+
+  Every function takes the options `timeout:` (milliseconds) last.
+  """
+
+  alias Lettermint.{Client, Transport, Types}
+
+  @type result(value) :: {:ok, value} | {:error, Lettermint.Error.t()}
+
+  @doc "Lists pending invitations, one page at a time. `query`: `t:Lettermint.Types.ListTeamInvitesQuery.t/0`."
+  @spec list(Client.t(), Types.ListTeamInvitesQuery.t(), keyword()) ::
+          result(Types.ListTeamInvitesResponse.t())
+  def list(%Client{} = client, query \\ %{}, options \\ []) do
+    Transport.call(client, "GET /team/invites", %{
+      label: "team.invites.list",
+      query: query,
+      options: options
+    })
+  end
+
+  @doc "Streams every pending invitation, following `next_cursor`. Raises the error of a failed page request."
+  @spec iterate(Client.t(), Types.ListTeamInvitesQuery.t(), keyword()) ::
+          Enumerable.t(Types.TeamInviteData.t())
+  def iterate(%Client{} = client, query \\ %{}, options \\ []) do
+    Transport.paginate(client, "GET /team/invites", %{
+      label: "team.invites.iterate",
+      query: query,
+      options: options
+    })
+  end
+
+  @doc "Retrieves a pending invitation."
+  @spec retrieve(Client.t(), String.t(), keyword()) :: result(Types.TeamInviteData.t())
+  def retrieve(%Client{} = client, invite_id, options \\ []) do
+    Transport.call(client, "GET /team/invites/{inviteId}", %{
+      label: "team.invites.retrieve",
+      path: %{"inviteId" => invite_id},
+      options: options
+    })
+  end
+
+  @doc """
+  Invites a person to the team and sends the invitation email. The team needs
+  a free seat, and the Owner role cannot be assigned.
+  """
+  @spec create(Client.t(), Types.CreateTeamInviteData.t() | map(), keyword()) ::
+          result(Types.TeamInviteData.t())
+  def create(%Client{} = client, body, options \\ []) do
+    Transport.call(client, "POST /team/invites", %{
+      label: "team.invites.create",
+      body: body,
+      options: options
+    })
+  end
+
+  @doc """
+  Replaces the email, role and project access of a pending invitation. A new
+  invitation email is sent only when the address changes.
+  """
+  @spec update(Client.t(), String.t(), Types.UpdateTeamInviteData.t() | map(), keyword()) ::
+          result(Types.TeamInviteData.t())
+  def update(%Client{} = client, invite_id, body, options \\ []) do
+    Transport.call(client, "PUT /team/invites/{inviteId}", %{
+      label: "team.invites.update",
+      path: %{"inviteId" => invite_id},
+      body: body,
+      options: options
+    })
+  end
+
+  @doc "Revokes a pending invitation."
+  @spec revoke(Client.t(), String.t(), keyword()) :: result(Types.MessageResponse.t())
+  def revoke(%Client{} = client, invite_id, options \\ []) do
+    Transport.call(client, "DELETE /team/invites/{inviteId}", %{
+      label: "team.invites.revoke",
+      path: %{"inviteId" => invite_id},
       options: options
     })
   end
