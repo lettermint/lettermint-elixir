@@ -193,7 +193,12 @@ defmodule Lettermint.Team.Members do
 
   @type result(value) :: {:ok, value} | {:error, Lettermint.Error.t()}
 
-  @doc "Lists team members, one page at a time. `query`: `t:Lettermint.Types.ListTeamMembersQuery.t/0`."
+  @doc """
+  Lists team members, one page at a time. `query`:
+  `t:Lettermint.Types.ListTeamMembersQuery.t/0`, for example
+  `%{filter: %{project_id: "..."}}` for only the members who can access that
+  project.
+  """
   @spec list(Client.t(), Types.ListTeamMembersQuery.t(), keyword()) ::
           result(Types.ListTeamMembersResponse.t())
   def list(%Client{} = client, query \\ %{}, options \\ []) do
@@ -238,6 +243,16 @@ defmodule Lettermint.Team.Members do
       label: "team.members.update_assignment",
       path: %{"userId" => user_id},
       body: body,
+      options: options
+    })
+  end
+
+  @doc "Removes a member from the team. The Owner cannot be removed."
+  @spec remove(Client.t(), String.t(), keyword()) :: result(Types.MessageResponse.t())
+  def remove(%Client{} = client, user_id, options \\ []) do
+    Transport.call(client, "DELETE /team/members/{userId}", %{
+      label: "team.members.remove",
+      path: %{"userId" => user_id},
       options: options
     })
   end

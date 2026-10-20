@@ -331,6 +331,10 @@ project.api_token # the new project's sending token, shown once
   Lettermint.Team.create_role(lettermint, %{name: "Support", permissions: ["members:read", "messages:read"]})
 
 {:ok, _} = Lettermint.Team.delete_role(lettermint, role.id, %{replacement_role_id: "other-role-id"})
+
+# The members who can access a project, and removing a member from the team.
+{:ok, page} = Lettermint.Team.Members.list(lettermint, %{filter: %{project_id: project.id}})
+{:ok, _} = Lettermint.Team.Members.remove(lettermint, "user-id")
 ```
 
 | Module | Functions |
@@ -343,7 +347,7 @@ project.api_token # the new project's sending token, shown once
 | `Lettermint.Stats` | `retrieve` |
 | `Lettermint.Suppressions` | `list`, `iterate`, `create`, `delete` |
 | `Lettermint.Team` | `retrieve`, `update`, `usage`, `roles`, `retrieve_role`, `create_role`, `update_role`, `delete_role`, `duplicate_role` |
-| `Lettermint.Team.Members` | `list`, `iterate`, `retrieve`, `update_assignment` |
+| `Lettermint.Team.Members` | `list`, `iterate`, `retrieve`, `update_assignment`, `remove` |
 | `Lettermint.Team.Invites` | `list`, `iterate`, `retrieve`, `create`, `update`, `revoke` |
 | `Lettermint.Webhooks` | `list`, `iterate`, `create`, `retrieve`, `update`, `delete`, `test`, `regenerate_secret` |
 | `Lettermint.Webhooks.Deliveries` | `list(client, webhook_id)`, `iterate(client, webhook_id)`, `retrieve(client, webhook_id, delivery_id)`, `retry(client, webhook_id, delivery_id)` |
