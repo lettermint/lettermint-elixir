@@ -83,6 +83,7 @@ defmodule Lettermint.TeamAPITest do
       {"GET /team/members/{userId}", &Team.Members.retrieve(&1, "id1")},
       {"PUT /team/members/{userId}/assignment",
        &Team.Members.update_assignment(&1, "id1", %{role: "admin"})},
+      {"DELETE /team/members/{userId}", &Team.Members.remove(&1, "id1")},
       {"GET /team/invites", &Team.Invites.list(&1)},
       {"GET /team/invites/{inviteId}", &Team.Invites.retrieve(&1, "id1")},
       {"POST /team/invites",
@@ -108,12 +109,6 @@ defmodule Lettermint.TeamAPITest do
        &Webhooks.Deliveries.retry(&1, "id1", "id2")}
     ]
   end
-
-  # Operations of the generated table that have no public function yet: they are
-  # added by the next PRs in this stack. Every other operation is checked strictly.
-  @pending [
-    "DELETE /team/members/{userId}"
-  ]
 
   # The stream functions of every paginated operation.
   defp streams do
@@ -152,8 +147,7 @@ defmodule Lettermint.TeamAPITest do
   end
 
   test "every operation in the generated table is reachable through a public function" do
-    assert Enum.sort(Enum.map(calls(), &elem(&1, 0)) ++ @pending) ==
-             Lettermint.Operations.keys()
+    assert Enum.sort(Enum.map(calls(), &elem(&1, 0))) == Lettermint.Operations.keys()
 
     for {key, call} <- calls() do
       operation = Lettermint.Operations.fetch!(key)

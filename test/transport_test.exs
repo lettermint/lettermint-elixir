@@ -968,6 +968,88 @@ defmodule Lettermint.TransportTest do
     end
   end
 
+  describe "team members" do
+    test "team.members.remove deletes the member and decodes the message" do
+      client = team_client(json(200, %{message: "Member removed.", future: 1}))
+
+      assert {:ok, %Types.MessageResponse{message: "Member removed.", extra: %{"future" => 1}}} =
+               Lettermint.Team.Members.remove(client, "u 1", timeout: 5_000)
+
+      assert_receive {:request, request}
+      assert request.method == :delete
+      assert path(request) == "/v1/team/members/u%201"
+      assert query(request) == nil
+      assert header(request, "authorization") == "Bearer " <> team_token()
+      assert header(request, "x-lettermint-token") == nil
+      assert header(request, "idempotency-key") == nil
+      assert request.body == nil
+      assert request.timeout == 5_000
+    end
+
+    test "team.members.remove validates its path parameter and needs the team token" do
+      for id <- ["", ".", ".."] do
+        assert_raise Lettermint.ConfigError, ~r/team.members.remove: userId/, fn ->
+          Lettermint.Team.Members.remove(team_client(), id)
+        end
+      end
+
+      assert_raise Lettermint.ConfigError, ~r/team.members.remove needs :team_token/, fn ->
+        Lettermint.Team.Members.remove(sending_client(), "u")
+      end
+
+      refute_received {:request, _}
+    end
+
+    test "team.members.remove maps 409 to a ConflictError and 404 to a NotFoundError" do
+      body = %{error: %{code: "owner_protected", message: "The Owner cannot be removed."}}
+
+      assert {:error, %Lettermint.ConflictError{status: 409, code: "owner_protected"} = error} =
+               Lettermint.Team.Members.remove(team_client(json(409, body)), "u")
+
+      assert error.message == "The Owner cannot be removed."
+      assert Lettermint.Error.is_api_error(error)
+
+      assert {:error, %Lettermint.NotFoundError{status: 404}} =
+               Lettermint.Team.Members.remove(
+                 team_client(json(404, %{message: "Not found."})),
+                 "u"
+               )
+    end
+
+    test "team.members.list and iterate send filter[project_id]" do
+      member = %{id: "u1", name: "Jane", email: "jane@example.com"}
+      client = team_client(json(200, %{data: [member], next_cursor: nil}))
+
+      assert {:ok, %Types.CursorPage{data: [%Types.TeamMemberData{id: "u1"}]}} =
+               Lettermint.Team.Members.list(client, %{filter: %{project_id: "p 1"}})
+
+      assert_receive {:request, request}
+      assert path(request) == "/v1/team/members"
+      assert URI.decode_query(query(request)) == %{"filter[project_id]" => "p 1"}
+
+      assert Enum.map(
+               Lettermint.Team.Members.iterate(client, %{
+                 page: %{size: 5},
+                 filter: %{project_id: "p1"}
+               }),
+               & &1.id
+             ) == ["u1"]
+
+      assert_receive {:request, request}
+
+      assert URI.decode_query(query(request)) == %{
+               "filter[project_id]" => "p1",
+               "page[size]" => "5"
+             }
+
+      assert {:ok, %Types.CursorPage{data: []}} =
+               Lettermint.Team.Members.list(
+                 team_client(json(200, %{data: [], next_cursor: nil})),
+                 %{filter: %{project_id: "unknown"}}
+               )
+    end
+  end
+
   describe "pagination" do
     defp pages(pages) do
       fn request ->
