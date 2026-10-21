@@ -112,6 +112,74 @@ defmodule Lettermint.Team do
   def roles(%Client{} = client, options \\ []) do
     Transport.call(client, "GET /team/roles", %{label: "team.roles", options: options})
   end
+
+  @doc "Retrieves a role."
+  @spec retrieve_role(Client.t(), String.t(), keyword()) :: result(Types.TeamRoleData.t())
+  def retrieve_role(%Client{} = client, role_id, options \\ []) do
+    Transport.call(client, "GET /team/roles/{roleId}", %{
+      label: "team.retrieve_role",
+      path: %{"roleId" => role_id},
+      options: options
+    })
+  end
+
+  @doc """
+  Creates a custom role. Needs a plan with custom roles. `permissions` must
+  include the permissions they depend on, and role names are unique.
+  """
+  @spec create_role(Client.t(), Types.CreateTeamRoleData.t() | map(), keyword()) ::
+          result(Types.TeamRoleData.t())
+  def create_role(%Client{} = client, body, options \\ []) do
+    Transport.call(client, "POST /team/roles", %{
+      label: "team.create_role",
+      body: body,
+      options: options
+    })
+  end
+
+  @doc "Replaces the name, description and permissions of a custom role. Built-in roles cannot be changed."
+  @spec update_role(Client.t(), String.t(), Types.UpdateTeamRoleData.t() | map(), keyword()) ::
+          result(Types.TeamRoleData.t())
+  def update_role(%Client{} = client, role_id, body, options \\ []) do
+    Transport.call(client, "PUT /team/roles/{roleId}", %{
+      label: "team.update_role",
+      path: %{"roleId" => role_id},
+      body: body,
+      options: options
+    })
+  end
+
+  @doc """
+  Deletes a custom role. Built-in roles cannot be deleted. `query`:
+  `%{replacement_role_id: ...}`, the role that receives the existing
+  assignments; it is required only while the role is still assigned to
+  members, invites or SCIM groups.
+  """
+  @spec delete_role(Client.t(), String.t(), Types.DeleteTeamRoleQuery.t(), keyword()) ::
+          result(Types.MessageResponse.t())
+  def delete_role(%Client{} = client, role_id, query \\ %{}, options \\ []) do
+    Transport.call(client, "DELETE /team/roles/{roleId}", %{
+      label: "team.delete_role",
+      path: %{"roleId" => role_id},
+      query: query,
+      options: options
+    })
+  end
+
+  @doc """
+  Copies a role under a new name. Without a `description`, the copy keeps the
+  description of the source role. The Owner role cannot be duplicated.
+  """
+  @spec duplicate_role(Client.t(), String.t(), Types.DuplicateTeamRoleData.t() | map(), keyword()) ::
+          result(Types.TeamRoleData.t())
+  def duplicate_role(%Client{} = client, role_id, body, options \\ []) do
+    Transport.call(client, "POST /team/roles/{roleId}/duplicate", %{
+      label: "team.duplicate_role",
+      path: %{"roleId" => role_id},
+      body: body,
+      options: options
+    })
+  end
 end
 
 defmodule Lettermint.Team.Members do

@@ -743,6 +743,231 @@ defmodule Lettermint.TransportTest do
     end
   end
 
+  describe "team roles" do
+    defp role(overrides \\ %{}) do
+      Map.merge(
+        %{
+          id: "r 1",
+          name: "Support",
+          description: "Handles support tickets",
+          system_key: nil,
+          permissions: ["members:read", "messages:read"],
+          assignable: true
+        },
+        overrides
+      )
+    end
+
+    test "team.create_role posts the role and decodes the 201 with its description" do
+      client = team_client(json(201, role(%{future: 1})))
+
+      assert {:ok,
+              %Types.TeamRoleData{
+                id: "r 1",
+                name: "Support",
+                description: "Handles support tickets",
+                system_key: nil,
+                permissions: ["members:read", "messages:read"],
+                assignable: true,
+                extra: %{"future" => 1}
+              }} =
+               Lettermint.Team.create_role(
+                 client,
+                 %Types.CreateTeamRoleData{
+                   name: "Support",
+                   description: "Handles support tickets",
+                   permissions: ["members:read", "messages:read"]
+                 },
+                 timeout: 5_000
+               )
+
+      assert_receive {:request, request}
+      assert request.method == :post
+      assert path(request) == "/v1/team/roles"
+      assert header(request, "authorization") == "Bearer " <> team_token()
+      assert header(request, "x-lettermint-token") == nil
+      assert header(request, "idempotency-key") == nil
+      assert header(request, "content-type") == "application/json"
+      assert request.timeout == 5_000
+
+      assert Jason.decode!(request.body) == %{
+               "name" => "Support",
+               "description" => "Handles support tickets",
+               "permissions" => ["members:read", "messages:read"]
+             }
+
+      assert {:ok, _} =
+               Lettermint.Team.create_role(client, %Types.CreateTeamRoleData{
+                 name: "Support",
+                 permissions: ["members:read"]
+               })
+
+      assert_receive {:request, request}
+
+      assert Jason.decode!(request.body) == %{
+               "name" => "Support",
+               "permissions" => ["members:read"]
+             }
+
+      assert {:ok, _} =
+               Lettermint.Team.create_role(client, %{
+                 name: "Support",
+                 description: nil,
+                 permissions: []
+               })
+
+      assert_receive {:request, request}
+
+      assert Jason.decode!(request.body) == %{
+               "name" => "Support",
+               "description" => nil,
+               "permissions" => []
+             }
+    end
+
+    test "team.retrieve_role decodes description as a value, nil or :unset" do
+      assert {:ok, %Types.TeamRoleData{id: "r 1", description: "Handles support tickets"}} =
+               Lettermint.Team.retrieve_role(team_client(json(200, role())), "r 1")
+
+      assert_receive {:request, request}
+      assert request.method == :get
+      assert path(request) == "/v1/team/roles/r%201"
+      assert header(request, "authorization") == "Bearer " <> team_token()
+      assert request.body == nil
+
+      assert {:ok, %Types.TeamRoleData{description: nil, system_key: "admin"}} =
+               Lettermint.Team.retrieve_role(
+                 team_client(json(200, role(%{description: nil, system_key: "admin"}))),
+                 "r"
+               )
+
+      assert {:ok, %Types.TeamRoleData{description: :unset}} =
+               Lettermint.Team.retrieve_role(
+                 team_client(json(200, Map.delete(role(), :description))),
+                 "r"
+               )
+
+      assert {:ok, %Types.TeamRoleListResponse{data: [%Types.TeamRoleData{description: nil}]}} =
+               Lettermint.Team.roles(team_client(json(200, %{data: [role(%{description: nil})]})))
+    end
+
+    test "team.update_role puts the replacement" do
+      client = team_client(json(200, role(%{name: "Support desk"})))
+
+      assert {:ok, %Types.TeamRoleData{name: "Support desk"}} =
+               Lettermint.Team.update_role(client, "r 1", %Types.UpdateTeamRoleData{
+                 name: "Support desk",
+                 description: nil,
+                 permissions: ["members:read"]
+               })
+
+      assert_receive {:request, request}
+      assert request.method == :put
+      assert path(request) == "/v1/team/roles/r%201"
+      assert header(request, "authorization") == "Bearer " <> team_token()
+
+      assert Jason.decode!(request.body) == %{
+               "name" => "Support desk",
+               "description" => nil,
+               "permissions" => ["members:read"]
+             }
+    end
+
+    test "team.delete_role sends replacement_role_id only when given" do
+      client = team_client(json(200, %{message: "Role deleted."}))
+
+      assert {:ok, %Types.MessageResponse{message: "Role deleted."}} =
+               Lettermint.Team.delete_role(client, "r 1")
+
+      assert_receive {:request, request}
+      assert request.method == :delete
+      assert path(request) == "/v1/team/roles/r%201"
+      assert query(request) == nil
+      assert request.url == "https://api.lettermint.co/v1/team/roles/r%201"
+      assert header(request, "authorization") == "Bearer " <> team_token()
+      assert request.body == nil
+
+      assert {:ok, %Types.MessageResponse{}} =
+               Lettermint.Team.delete_role(client, "r 1", %{replacement_role_id: "r 2"},
+                 timeout: 5_000
+               )
+
+      assert_receive {:request, request}
+      assert path(request) == "/v1/team/roles/r%201"
+      assert query(request) == "replacement_role_id=r+2"
+      assert request.timeout == 5_000
+      assert request.body == nil
+    end
+
+    test "team.duplicate_role posts the new name and the optional description" do
+      client = team_client(json(201, role(%{id: "r 2", name: "Support copy"})))
+
+      assert {:ok, %Types.TeamRoleData{id: "r 2", name: "Support copy"}} =
+               Lettermint.Team.duplicate_role(client, "r 1", %Types.DuplicateTeamRoleData{
+                 name: "Support copy"
+               })
+
+      assert_receive {:request, request}
+      assert request.method == :post
+      assert path(request) == "/v1/team/roles/r%201/duplicate"
+      assert header(request, "authorization") == "Bearer " <> team_token()
+      assert Jason.decode!(request.body) == %{"name" => "Support copy"}
+
+      assert {:ok, _} =
+               Lettermint.Team.duplicate_role(client, "r 1", %{
+                 name: "Support copy",
+                 description: "A copy"
+               })
+
+      assert_receive {:request, request}
+      assert Jason.decode!(request.body) == %{"name" => "Support copy", "description" => "A copy"}
+    end
+
+    test "team role functions validate their arguments and need the team token" do
+      assert_raise Lettermint.ConfigError, ~r/team.retrieve_role: roleId/, fn ->
+        Lettermint.Team.retrieve_role(team_client(), "")
+      end
+
+      assert_raise Lettermint.ConfigError, ~r/team.update_role: roleId/, fn ->
+        Lettermint.Team.update_role(team_client(), "..", %{})
+      end
+
+      assert_raise Lettermint.ConfigError, ~r/team.delete_role: roleId/, fn ->
+        Lettermint.Team.delete_role(team_client(), ".")
+      end
+
+      assert_raise Lettermint.ConfigError, ~r/team.duplicate_role: roleId/, fn ->
+        Lettermint.Team.duplicate_role(team_client(), "", %{name: "R"})
+      end
+
+      assert_raise Lettermint.ConfigError, ~r/team.delete_role: the query must be a map/, fn ->
+        Lettermint.Team.delete_role(team_client(), "r", timeout: 1000)
+      end
+
+      assert_raise Lettermint.ConfigError, ~r/team.create_role needs :team_token/, fn ->
+        Lettermint.Team.create_role(sending_client(), %{})
+      end
+
+      refute_received {:request, _}
+    end
+
+    test "team role functions map 409 to a ConflictError with the code" do
+      body = %{
+        error: %{code: "built_in_role_immutable", message: "Built-in roles cannot be changed."}
+      }
+
+      assert {:error,
+              %Lettermint.ConflictError{status: 409, code: "built_in_role_immutable"} = error} =
+               Lettermint.Team.update_role(team_client(json(409, body)), "r", %{})
+
+      assert error.message == "Built-in roles cannot be changed."
+      assert Lettermint.Error.is_api_error(error)
+
+      assert {:error, %Lettermint.ConflictError{status: 409}} =
+               Lettermint.Team.delete_role(team_client(json(409, body)), "r")
+    end
+  end
+
   describe "pagination" do
     defp pages(pages) do
       fn request ->

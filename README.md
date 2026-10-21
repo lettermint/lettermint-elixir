@@ -325,6 +325,12 @@ project.api_token # the new project's sending token, shown once
     role_id: "role-id",
     project_access: %{scope: "all"}
   })
+
+# Create a custom role. Deleting a role that is still assigned moves its assignments to a replacement role.
+{:ok, role} =
+  Lettermint.Team.create_role(lettermint, %{name: "Support", permissions: ["members:read", "messages:read"]})
+
+{:ok, _} = Lettermint.Team.delete_role(lettermint, role.id, %{replacement_role_id: "other-role-id"})
 ```
 
 | Module | Functions |
@@ -336,7 +342,7 @@ project.api_token # the new project's sending token, shown once
 | `Lettermint.Routes` | `list(client, project_id)`, `iterate(client, project_id)`, `create(client, project_id, …)`, `retrieve`, `update`, `delete`, `verify_inbound_domain` |
 | `Lettermint.Stats` | `retrieve` |
 | `Lettermint.Suppressions` | `list`, `iterate`, `create`, `delete` |
-| `Lettermint.Team` | `retrieve`, `update`, `usage`, `roles` |
+| `Lettermint.Team` | `retrieve`, `update`, `usage`, `roles`, `retrieve_role`, `create_role`, `update_role`, `delete_role`, `duplicate_role` |
 | `Lettermint.Team.Members` | `list`, `iterate`, `retrieve`, `update_assignment` |
 | `Lettermint.Team.Invites` | `list`, `iterate`, `retrieve`, `create`, `update`, `revoke` |
 | `Lettermint.Webhooks` | `list`, `iterate`, `create`, `retrieve`, `update`, `delete`, `test`, `regenerate_secret` |
