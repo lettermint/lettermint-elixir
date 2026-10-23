@@ -1,5 +1,20 @@
 # Changelog
 
+## v2.2.0 - 2026-10-23
+
+### What's Changed
+
+* chore(deps): bump req from 0.7.4 to 0.7.5 by @dependabot[bot] in https://github.com/lettermint/lettermint-elixir/pull/13
+* feat: add messages resend by @bjarn in https://github.com/lettermint/lettermint-elixir/pull/14
+* feat: add per-email idempotency keys to batch send by @bjarn in https://github.com/lettermint/lettermint-elixir/pull/15
+* feat: add webhook delivery retry by @bjarn in https://github.com/lettermint/lettermint-elixir/pull/17
+* chore(deps): bump actions/create-github-app-token from 3.2.0 to 3.3.0 by @dependabot[bot] in https://github.com/lettermint/lettermint-elixir/pull/18
+* feat: add team invites by @bjarn in https://github.com/lettermint/lettermint-elixir/pull/19
+* feat: add team role management by @bjarn in https://github.com/lettermint/lettermint-elixir/pull/20
+* feat: add team member removal and a project filter for the member list by @bjarn in https://github.com/lettermint/lettermint-elixir/pull/21
+
+**Full Changelog**: https://github.com/lettermint/lettermint-elixir/compare/v2.1.0...v2.2.0
+
 ## v2.1.0 - 2026-10-11
 
 ### What's Changed
