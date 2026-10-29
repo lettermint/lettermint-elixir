@@ -540,6 +540,198 @@ defmodule Lettermint.TransportTest do
     end
   end
 
+  describe "project API tokens" do
+    defp project_api_token(overrides \\ %{}) do
+      Map.merge(
+        %{
+          id: "t 1",
+          project_id: "p 1",
+          name: "Production",
+          short_token: false,
+          created_via: "api",
+          allowed_ips: [],
+          last_used_at: nil,
+          created_at: "2026-10-29T09:00:00Z"
+        },
+        overrides
+      )
+    end
+
+    test "projects.api_tokens.create posts the token and decodes its value and the SMTP settings" do
+      created = %{
+        data: project_api_token(%{token: "lm_secret_value"}),
+        smtp: %{host: "smtp.lettermint.co", ports: [465, 587], username: "lettermint"},
+        message: "Token created."
+      }
+
+      client = team_client(json(201, created))
+
+      assert {:ok,
+              %Types.ProjectApiTokenCreatedResponse{
+                data: %Types.ProjectApiTokenSecret{
+                  id: "t 1",
+                  project_id: "p 1",
+                  name: "Production",
+                  short_token: false,
+                  created_via: "api",
+                  allowed_ips: [],
+                  last_used_at: nil,
+                  token: "lm_secret_value"
+                },
+                smtp: %Types.SmtpCredentials{
+                  host: "smtp.lettermint.co",
+                  ports: [465, 587],
+                  username: "lettermint"
+                },
+                message: "Token created."
+              }} =
+               Lettermint.Projects.ApiTokens.create(
+                 client,
+                 "p 1",
+                 %Types.StoreProjectApiTokenData{name: "Production"},
+                 timeout: 5_000
+               )
+
+      assert_receive {:request, request}
+      assert request.method == :post
+      assert path(request) == "/v1/projects/p%201/api-tokens"
+      assert header(request, "authorization") == "Bearer " <> team_token()
+      assert header(request, "x-lettermint-token") == nil
+      assert header(request, "idempotency-key") == nil
+      assert header(request, "content-type") == "application/json"
+      assert request.timeout == 5_000
+      assert Jason.decode!(request.body) == %{"name" => "Production"}
+
+      assert {:ok, %Types.ProjectApiTokenCreatedResponse{}} =
+               Lettermint.Projects.ApiTokens.create(client, "p 1", %{
+                 name: "Printer",
+                 short_token: true
+               })
+
+      assert_receive {:request, request}
+      assert Jason.decode!(request.body) == %{"name" => "Printer", "short_token" => true}
+    end
+
+    test "projects.api_tokens.create decodes a null smtp when SMTP is disabled" do
+      created = %{
+        data: project_api_token(%{token: "lm_secret_value"}),
+        smtp: nil,
+        message: "Token created."
+      }
+
+      assert {:ok,
+              %Types.ProjectApiTokenCreatedResponse{
+                smtp: nil,
+                data: %Types.ProjectApiTokenSecret{token: "lm_secret_value"}
+              }} =
+               Lettermint.Projects.ApiTokens.create(
+                 team_client(json(201, created)),
+                 "p",
+                 %{name: "P"}
+               )
+    end
+
+    test "projects.api_tokens list, iterate and delete" do
+      client = team_client(json(200, %{data: [project_api_token()], next_cursor: nil}))
+
+      assert {:ok,
+              %Types.CursorPage{
+                data: [%Types.ProjectApiToken{id: "t 1", name: "Production"} = token],
+                next_cursor: nil
+              }} =
+               Lettermint.Projects.ApiTokens.list(client, "p 1", %{
+                 page: %{size: 10, cursor: "c1"},
+                 sort: ["-created_at"]
+               })
+
+      refute Map.has_key?(token, :token)
+      assert_receive {:request, request}
+      assert request.method == :get
+      assert path(request) == "/v1/projects/p%201/api-tokens"
+
+      assert URI.decode_query(query(request)) == %{
+               "page[size]" => "10",
+               "page[cursor]" => "c1",
+               "sort" => "-created_at"
+             }
+
+      assert header(request, "authorization") == "Bearer " <> team_token()
+
+      assert [%Types.ProjectApiToken{id: "t 1"}] =
+               Enum.to_list(Lettermint.Projects.ApiTokens.iterate(client, "p 1"))
+
+      assert_receive {:request, request}
+      assert path(request) == "/v1/projects/p%201/api-tokens"
+
+      assert {:ok, %Types.MessageResponse{message: "Token deleted."}} =
+               Lettermint.Projects.ApiTokens.delete(
+                 team_client(json(200, %{message: "Token deleted."})),
+                 "p 1",
+                 "t 1"
+               )
+
+      assert_receive {:request, request}
+      assert request.method == :delete
+      assert path(request) == "/v1/projects/p%201/api-tokens/t%201"
+      assert header(request, "authorization") == "Bearer " <> team_token()
+      assert header(request, "idempotency-key") == nil
+      assert request.body == nil
+    end
+
+    test "projects.api_tokens validates its path parameters and needs the team token" do
+      for id <- ["", ".", ".."] do
+        assert_raise Lettermint.ConfigError, ~r/projects.api_tokens.list: projectId/, fn ->
+          Lettermint.Projects.ApiTokens.list(team_client(), id)
+        end
+
+        assert_raise Lettermint.ConfigError, ~r/projects.api_tokens.create: projectId/, fn ->
+          Lettermint.Projects.ApiTokens.create(team_client(), id, %{name: "T"})
+        end
+
+        assert_raise Lettermint.ConfigError, ~r/projects.api_tokens.delete: projectId/, fn ->
+          Lettermint.Projects.ApiTokens.delete(team_client(), id, "t")
+        end
+
+        assert_raise Lettermint.ConfigError, ~r/projects.api_tokens.delete: tokenId/, fn ->
+          Lettermint.Projects.ApiTokens.delete(team_client(), "p", id)
+        end
+      end
+
+      assert_raise Lettermint.ConfigError, ~r/projects.api_tokens.create needs :team_token/, fn ->
+        Lettermint.Projects.ApiTokens.create(sending_client(), "p", %{name: "T"})
+      end
+
+      assert_raise Lettermint.ConfigError,
+                   ~r/projects.api_tokens.iterate needs :team_token/,
+                   fn ->
+                     Lettermint.Projects.ApiTokens.iterate(sending_client(), "p")
+                   end
+
+      refute_received {:request, _}
+    end
+
+    test "projects.api_tokens maps 422 to a ValidationError and 404 to a NotFoundError" do
+      invalid = %{
+        message: "The name field is required.",
+        errors: %{name: ["The name field is required."]}
+      }
+
+      assert {:error,
+              %Lettermint.ValidationError{
+                status: 422,
+                errors: %{"name" => ["The name field is required."]}
+              }} =
+               Lettermint.Projects.ApiTokens.create(team_client(json(422, invalid)), "p", %{})
+
+      assert {:error, %Lettermint.NotFoundError{status: 404}} =
+               Lettermint.Projects.ApiTokens.delete(
+                 team_client(json(404, %{message: "Not found."})),
+                 "p",
+                 "t"
+               )
+    end
+  end
+
   describe "team invites" do
     defp invite(overrides \\ %{}) do
       Map.merge(

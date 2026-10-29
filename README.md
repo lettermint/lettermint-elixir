@@ -309,6 +309,12 @@ lettermint = Lettermint.new(team_token: System.fetch_env!("LETTERMINT_TEAM_TOKEN
 {:ok, project} = Lettermint.Projects.create(lettermint, %{name: "Production"})
 project.api_token # the new project's sending token, shown once
 
+# Another sending token for the project. Its value is only returned once: store it now.
+# When SMTP is enabled for the project, the token is also the SMTP password.
+{:ok, created} = Lettermint.Projects.ApiTokens.create(lettermint, project.id, %{name: "Mailer"})
+created.data.token
+{:ok, _} = Lettermint.Projects.ApiTokens.delete(lettermint, project.id, created.data.id)
+
 {:ok, stats} = Lettermint.Stats.retrieve(lettermint, %{from: "2026-10-01", to: "2026-10-31"})
 {:ok, html} = Lettermint.Messages.html(lettermint, "message-id")
 
@@ -343,6 +349,7 @@ project.api_token # the new project's sending token, shown once
 | `Lettermint.Messages` | `list`, `iterate`, `retrieve`, `events`, `iterate_events`, `source`, `html`, `text`, `reschedule`, `cancel`, `process`, `resend` |
 | `Lettermint.Projects` | `list`, `iterate`, `create`, `retrieve`, `update`, `delete`, `rotate_token` |
 | `Lettermint.Projects.ReportForwarding` | `retrieve`, `update`, `delete`, `verify`, `resend_code` |
+| `Lettermint.Projects.ApiTokens` | `list(client, project_id)`, `iterate(client, project_id)`, `create(client, project_id, …)`, `delete(client, project_id, token_id)` |
 | `Lettermint.Routes` | `list(client, project_id)`, `iterate(client, project_id)`, `create(client, project_id, …)`, `retrieve`, `update`, `delete`, `verify_inbound_domain` |
 | `Lettermint.Stats` | `retrieve` |
 | `Lettermint.Suppressions` | `list`, `iterate`, `create`, `delete` |
