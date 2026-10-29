@@ -19,7 +19,8 @@ defmodule Lettermint do
       `Lettermint.Projects.ReportForwarding`, `Lettermint.Projects.ApiTokens`,
       `Lettermint.Routes`, `Lettermint.Stats`, `Lettermint.Suppressions`,
       `Lettermint.Team`, `Lettermint.Team.Members`, `Lettermint.Team.Invites`,
-      `Lettermint.Webhooks`, `Lettermint.Webhooks.Deliveries`, and `analytics/3`,
+      `Lettermint.Team.ApiTokens`, `Lettermint.Webhooks`,
+      `Lettermint.Webhooks.Deliveries`, and `analytics/3`,
       `analytics_pages/3` and `blocked_file_types/2` below;
     * `ping/2`, `Lettermint.Messages.reschedule/4` and
       `Lettermint.Messages.cancel/3` use the team token when it is set,

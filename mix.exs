@@ -60,6 +60,7 @@ defmodule Lettermint.MixProject do
           Lettermint.Team,
           Lettermint.Team.Members,
           Lettermint.Team.Invites,
+          Lettermint.Team.ApiTokens,
           Lettermint.Webhooks,
           Lettermint.Webhooks.Deliveries
         ],

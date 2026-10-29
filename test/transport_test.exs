@@ -732,6 +732,183 @@ defmodule Lettermint.TransportTest do
     end
   end
 
+  describe "team API tokens" do
+    defp team_api_token(overrides \\ %{}) do
+      Map.merge(
+        %{
+          id: "t 1",
+          name: "Terraform",
+          abilities: ["read:projects", "write:projects"],
+          allowed_ips: ["203.0.113.0/24"],
+          created_via: "api",
+          expires_at: "2027-01-01T00:00:00Z",
+          last_used_at: nil,
+          created_at: "2026-10-29T09:00:00Z"
+        },
+        overrides
+      )
+    end
+
+    test "team.api_tokens.create posts the token and decodes its value" do
+      created = %{
+        data: team_api_token(%{token: "lm_team_secret_value"}),
+        message: "Token created."
+      }
+
+      client = team_client(json(201, created))
+
+      assert {:ok,
+              %Types.TeamApiTokenCreatedResponse{
+                data: %Types.TeamApiTokenSecret{
+                  id: "t 1",
+                  name: "Terraform",
+                  abilities: ["read:projects", "write:projects"],
+                  allowed_ips: ["203.0.113.0/24"],
+                  created_via: "api",
+                  expires_at: "2027-01-01T00:00:00Z",
+                  token: "lm_team_secret_value"
+                },
+                message: "Token created."
+              }} =
+               Lettermint.Team.ApiTokens.create(
+                 client,
+                 %Types.StoreTeamApiTokenData{
+                   name: "Terraform",
+                   abilities: ["read:projects", "write:projects"],
+                   expires_at: "2027-01-01T00:00:00Z"
+                 },
+                 timeout: 5_000
+               )
+
+      assert_receive {:request, request}
+      assert request.method == :post
+      assert path(request) == "/v1/team/api-tokens"
+      assert header(request, "authorization") == "Bearer " <> team_token()
+      assert header(request, "x-lettermint-token") == nil
+      assert header(request, "idempotency-key") == nil
+      assert header(request, "content-type") == "application/json"
+      assert request.timeout == 5_000
+
+      assert Jason.decode!(request.body) == %{
+               "name" => "Terraform",
+               "abilities" => ["read:projects", "write:projects"],
+               "expires_at" => "2027-01-01T00:00:00Z"
+             }
+
+      assert {:ok, _} =
+               Lettermint.Team.ApiTokens.create(client, %Types.StoreTeamApiTokenData{
+                 name: "CI",
+                 abilities: ["read:projects"]
+               })
+
+      assert_receive {:request, request}
+      assert Jason.decode!(request.body) == %{"name" => "CI", "abilities" => ["read:projects"]}
+
+      assert {:ok, _} =
+               Lettermint.Team.ApiTokens.create(client, %{
+                 name: "CI",
+                 abilities: [],
+                 expires_at: nil
+               })
+
+      assert_receive {:request, request}
+
+      assert Jason.decode!(request.body) == %{
+               "name" => "CI",
+               "abilities" => [],
+               "expires_at" => nil
+             }
+    end
+
+    test "team.api_tokens list, iterate and delete" do
+      client = team_client(json(200, %{data: [team_api_token()], next_cursor: nil}))
+
+      assert {:ok,
+              %Types.CursorPage{
+                data: [
+                  %Types.TeamApiToken{id: "t 1", abilities: ["read:projects", "write:projects"]}
+                ],
+                next_cursor: nil
+              }} =
+               Lettermint.Team.ApiTokens.list(client, %{
+                 page: %{size: 10, cursor: "c1"},
+                 sort: ["name"]
+               })
+
+      assert_receive {:request, request}
+      assert request.method == :get
+      assert path(request) == "/v1/team/api-tokens"
+
+      assert URI.decode_query(query(request)) == %{
+               "page[size]" => "10",
+               "page[cursor]" => "c1",
+               "sort" => "name"
+             }
+
+      assert header(request, "authorization") == "Bearer " <> team_token()
+
+      assert [%Types.TeamApiToken{id: "t 1"}] =
+               Enum.to_list(Lettermint.Team.ApiTokens.iterate(client))
+
+      assert_receive {:request, request}
+      assert path(request) == "/v1/team/api-tokens"
+
+      assert {:ok, %Types.MessageResponse{message: "Token deleted."}} =
+               Lettermint.Team.ApiTokens.delete(
+                 team_client(json(200, %{message: "Token deleted."})),
+                 "t 1"
+               )
+
+      assert_receive {:request, request}
+      assert request.method == :delete
+      assert path(request) == "/v1/team/api-tokens/t%201"
+      assert header(request, "authorization") == "Bearer " <> team_token()
+      assert header(request, "idempotency-key") == nil
+      assert request.body == nil
+    end
+
+    test "team.api_tokens validates its path parameter and needs the team token" do
+      for id <- ["", ".", ".."] do
+        assert_raise Lettermint.ConfigError, ~r/team.api_tokens.delete: tokenId/, fn ->
+          Lettermint.Team.ApiTokens.delete(team_client(), id)
+        end
+      end
+
+      assert_raise Lettermint.ConfigError, ~r/team.api_tokens.create needs :team_token/, fn ->
+        Lettermint.Team.ApiTokens.create(sending_client(), %{name: "T", abilities: []})
+      end
+
+      assert_raise Lettermint.ConfigError, ~r/team.api_tokens.list needs :team_token/, fn ->
+        Lettermint.Team.ApiTokens.list(sending_client())
+      end
+
+      refute_received {:request, _}
+    end
+
+    test "team.api_tokens maps 422 to a ValidationError and 403 to a PermissionError" do
+      invalid = %{
+        message: "The token cannot grant abilities it does not have.",
+        errors: %{abilities: ["The token cannot grant abilities it does not have."]}
+      }
+
+      assert {:error,
+              %Lettermint.ValidationError{
+                status: 422,
+                errors: %{"abilities" => ["The token cannot grant abilities it does not have."]}
+              }} =
+               Lettermint.Team.ApiTokens.create(team_client(json(422, invalid)), %{
+                 name: "Admin",
+                 abilities: ["*"]
+               })
+
+      assert {:error, %Lettermint.PermissionError{status: 403}} =
+               Lettermint.Team.ApiTokens.delete(
+                 team_client(json(403, %{message: "This action is unauthorized."})),
+                 "t"
+               )
+    end
+  end
+
   describe "team invites" do
     defp invite(overrides \\ %{}) do
       Map.merge(

@@ -100,6 +100,10 @@ defmodule Lettermint.TeamAPITest do
          project_access: %{scope: "all"}
        })},
       {"DELETE /team/invites/{inviteId}", &Team.Invites.revoke(&1, "id1")},
+      {"GET /team/api-tokens", &Team.ApiTokens.list(&1)},
+      {"POST /team/api-tokens",
+       &Team.ApiTokens.create(&1, %{name: "T", abilities: ["read:projects"]})},
+      {"DELETE /team/api-tokens/{tokenId}", &Team.ApiTokens.delete(&1, "id2")},
       {"GET /webhooks", &Webhooks.list(&1)},
       {"POST /webhooks", &Webhooks.create(&1, %{url: "https://x.co"})},
       {"GET /webhooks/{webhookId}", &Webhooks.retrieve(&1, "id1")},
@@ -115,14 +119,6 @@ defmodule Lettermint.TeamAPITest do
     ]
   end
 
-  # Operations of the generated table that have no public function yet: they are
-  # added by the next PR in this stack. Every other operation is checked strictly.
-  @pending [
-    "GET /team/api-tokens",
-    "POST /team/api-tokens",
-    "DELETE /team/api-tokens/{tokenId}"
-  ]
-
   # The stream functions of every paginated operation.
   defp streams do
     [
@@ -135,6 +131,7 @@ defmodule Lettermint.TeamAPITest do
       {"GET /suppressions", &Suppressions.iterate(&1)},
       {"GET /team/members", &Team.Members.iterate(&1)},
       {"GET /team/invites", &Team.Invites.iterate(&1)},
+      {"GET /team/api-tokens", &Team.ApiTokens.iterate(&1)},
       {"GET /webhooks", &Webhooks.iterate(&1)},
       {"GET /webhooks/{webhookId}/deliveries", &Webhooks.Deliveries.iterate(&1, "id1")}
     ]
@@ -161,8 +158,7 @@ defmodule Lettermint.TeamAPITest do
   end
 
   test "every operation in the generated table is reachable through a public function" do
-    assert Enum.sort(Enum.map(calls(), &elem(&1, 0)) ++ @pending) ==
-             Lettermint.Operations.keys()
+    assert Enum.sort(Enum.map(calls(), &elem(&1, 0))) == Lettermint.Operations.keys()
 
     for {key, call} <- calls() do
       operation = Lettermint.Operations.fetch!(key)
@@ -181,8 +177,7 @@ defmodule Lettermint.TeamAPITest do
   end
 
   test "every paginated operation has a stream" do
-    paginated =
-      for {key, %{pagination: %{}}} <- Lettermint.Operations.all(), key not in @pending, do: key
+    paginated = for {key, %{pagination: %{}}} <- Lettermint.Operations.all(), do: key
 
     assert Enum.sort(Enum.map(streams(), &elem(&1, 0))) == Enum.sort(paginated)
 
