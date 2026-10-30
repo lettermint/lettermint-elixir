@@ -79,7 +79,8 @@ end
 defmodule Lettermint.Team do
   @moduledoc """
   The team of the token. Needs `:team_token`. Members are in
-  `Lettermint.Team.Members`, pending invitations in `Lettermint.Team.Invites`.
+  `Lettermint.Team.Members`, pending invitations in `Lettermint.Team.Invites`,
+  API tokens in `Lettermint.Team.ApiTokens`.
 
   Every function takes the options `timeout:` (milliseconds) last.
   """
@@ -336,6 +337,74 @@ defmodule Lettermint.Team.Invites do
     Transport.call(client, "DELETE /team/invites/{inviteId}", %{
       label: "team.invites.revoke",
       path: %{"inviteId" => invite_id},
+      options: options
+    })
+  end
+end
+
+defmodule Lettermint.Team.ApiTokens do
+  @moduledoc """
+  Team API tokens. Needs `:team_token`.
+
+  A token's value is only returned once, by `create/3`; store it then.
+
+  Every function takes the options `timeout:` (milliseconds) last.
+  """
+
+  alias Lettermint.{Client, Transport, Types}
+
+  @type result(value) :: {:ok, value} | {:error, Lettermint.Error.t()}
+
+  @doc """
+  Lists the team's API tokens, one page at a time, without their values.
+  `query`: `t:Lettermint.Types.ListTeamApiTokensQuery.t/0`.
+  """
+  @spec list(Client.t(), Types.ListTeamApiTokensQuery.t(), keyword()) ::
+          result(Types.ListTeamApiTokensResponse.t())
+  def list(%Client{} = client, query \\ %{}, options \\ []) do
+    Transport.call(client, "GET /team/api-tokens", %{
+      label: "team.api_tokens.list",
+      query: query,
+      options: options
+    })
+  end
+
+  @doc "Streams every team API token, following `next_cursor`. Raises the error of a failed page request."
+  @spec iterate(Client.t(), Types.ListTeamApiTokensQuery.t(), keyword()) ::
+          Enumerable.t(Types.TeamApiToken.t())
+  def iterate(%Client{} = client, query \\ %{}, options \\ []) do
+    Transport.paginate(client, "GET /team/api-tokens", %{
+      label: "team.api_tokens.iterate",
+      query: query,
+      options: options
+    })
+  end
+
+  @doc """
+  Creates a team API token. The new token can only have abilities that the
+  requesting token has. It copies the requesting token's IP allowlist, and it
+  can't outlive the requesting token. The response holds the token's value once
+  (`data.token`); store it, because it cannot be read again.
+  """
+  @spec create(Client.t(), Types.StoreTeamApiTokenData.t() | map(), keyword()) ::
+          result(Types.TeamApiTokenCreatedResponse.t())
+  def create(%Client{} = client, body, options \\ []) do
+    Transport.call(client, "POST /team/api-tokens", %{
+      label: "team.api_tokens.create",
+      body: body,
+      options: options
+    })
+  end
+
+  @doc """
+  Deletes a team API token. The token stops working immediately. A token can
+  only delete tokens whose abilities it also has.
+  """
+  @spec delete(Client.t(), String.t(), keyword()) :: result(Types.MessageResponse.t())
+  def delete(%Client{} = client, token_id, options \\ []) do
+    Transport.call(client, "DELETE /team/api-tokens/{tokenId}", %{
+      label: "team.api_tokens.delete",
+      path: %{"tokenId" => token_id},
       options: options
     })
   end
