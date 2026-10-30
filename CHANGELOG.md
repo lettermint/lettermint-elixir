@@ -1,5 +1,16 @@
 # Changelog
 
+## v2.3.0 - 2026-10-30
+
+### What's Changed
+
+* feat: add the inbound.rejected webhook event by @bjarn in https://github.com/lettermint/lettermint-elixir/pull/23
+* feat: manage project API tokens by @bjarn in https://github.com/lettermint/lettermint-elixir/pull/24
+* feat: manage team API tokens by @bjarn in https://github.com/lettermint/lettermint-elixir/pull/25
+* chore(deps): bump mint from 1.10.2 to 1.11.0 by @dependabot[bot] in https://github.com/lettermint/lettermint-elixir/pull/11
+
+**Full Changelog**: https://github.com/lettermint/lettermint-elixir/compare/v2.2.0...v2.3.0
+
 ## v2.2.0 - 2026-10-23
 
 ### What's Changed
