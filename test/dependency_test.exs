@@ -4,10 +4,10 @@ defmodule Lettermint.DependencyTest do
   test "package dependency requirements exclude vulnerable Mint versions" do
     {:mint, requirement} = List.keyfind(Mix.Project.config()[:deps], :mint, 0)
 
-    for version <- ["1.9.3", "1.10.0", "1.10.1"] do
+    for version <- ["1.9.3", "1.10.0", "1.10.1", "1.10.2"] do
       refute Version.match?(version, requirement)
     end
 
-    assert Version.match?("1.10.2", requirement)
+    assert Version.match?("1.11.0", requirement)
   end
 end
