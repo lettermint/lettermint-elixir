@@ -17,15 +17,17 @@ concurrency:
 jobs:
   test:
     timeout-minutes: 20
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os || 'ubuntu-latest' }}
     strategy:
       fail-fast: false
       matrix:
         # The oldest supported pair (Elixir 1.15 on OTP 25, which 2.0 needs for
         # :crypto.hash_equals/2), a middle one and the newest.
         include:
+          # Hex has no OTP 25 builds for Ubuntu 26.04, which ubuntu-latest now is.
           - elixir: '1.15.8'
             otp: '25.3'
+            os: ubuntu-24.04
           - elixir: '1.17.3'
             otp: '27.2'
           - elixir: '1.20.4'
@@ -71,3 +73,15 @@ jobs:
           path: lettermint-*.tar
           if-no-files-found: error
           retention-days: 30
+
+  # The one check branch protection requires. It fails when a job above failed or
+  # was cancelled; skipped jobs count as passed.
+  ci:
+    name: ci
+    if: ${{ always() }}
+    needs: [test]
+    runs-on: ubuntu-slim
+    steps:
+      - name: Fail when a job failed or was cancelled
+        if: ${{ contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled') }}
+        run: exit 1
