@@ -1006,6 +1006,164 @@ defmodule Lettermint.TransportTest do
     end
   end
 
+  describe "domain DKIM upgrade and rotation" do
+    defp dkim_domain(transition) do
+      %{
+        id: "d 1",
+        domain: "acme.com",
+        dkim_mode: "legacy_txt",
+        rotation_ready: false,
+        status_changed_at: nil,
+        dkim_transition: transition,
+        dns_records: [
+          %{
+            id: "r1",
+            type: "CNAME",
+            hostname: "lm1._domainkey",
+            fqdn: "lm1._domainkey.acme.com",
+            content: "lm1.dkim.lettermint.co",
+            status: "pending",
+            purpose: "dkim",
+            verification_scope: "migration",
+            required_for_verification: false,
+            verified_at: nil,
+            last_checked_at: nil
+          }
+        ],
+        created_at: "2026-11-01T09:00:00Z"
+      }
+    end
+
+    defp dkim_calls do
+      [
+        {&Lettermint.Domains.start_dkim_upgrade/3, :post, "/v1/domains/d%201/dkim/upgrade",
+         "domains.start_dkim_upgrade"},
+        {&Lettermint.Domains.cancel_dkim_upgrade/3, :delete, "/v1/domains/d%201/dkim/upgrade",
+         "domains.cancel_dkim_upgrade"},
+        {&Lettermint.Domains.activate_dkim_upgrade/3, :post,
+         "/v1/domains/d%201/dkim/upgrade/activate", "domains.activate_dkim_upgrade"},
+        {&Lettermint.Domains.rotate_dkim_key/3, :post, "/v1/domains/d%201/dkim/rotate",
+         "domains.rotate_dkim_key"}
+      ]
+    end
+
+    test "each function sends no body with the team token and decodes the domain" do
+      transition = %{
+        type: "legacy_upgrade",
+        state: "awaiting_dns",
+        completes_after: nil
+      }
+
+      for {function, method, path, label} <- dkim_calls(), status <- [200, 202] do
+        client =
+          team_client(json(status, %{data: dkim_domain(transition), message: "Upgrade started."}))
+
+        assert {:ok,
+                %Types.DomainMutationResponse{
+                  message: "Upgrade started.",
+                  data: %Types.DomainData{
+                    id: "d 1",
+                    dkim_mode: "legacy_txt",
+                    dkim_transition: %Types.DomainDkimTransition{
+                      type: "legacy_upgrade",
+                      state: "awaiting_dns",
+                      completes_after: nil
+                    },
+                    dns_records: [
+                      %Types.DomainDnsRecordData{type: "CNAME", verification_scope: "migration"}
+                    ]
+                  }
+                }} = function.(client, "d 1", timeout: 5_000),
+               label
+
+        assert_receive {:request, request}
+        assert request.method == method, label
+        assert path(request) == path, label
+        assert header(request, "authorization") == "Bearer " <> team_token(), label
+        assert header(request, "x-lettermint-token") == nil, label
+        assert header(request, "idempotency-key") == nil, label
+        assert header(request, "content-type") == nil, label
+        assert request.body == nil, label
+        assert request.timeout == 5_000, label
+      end
+    end
+
+    test "a domain without a transition decodes dkim_transition as nil or :unset" do
+      client =
+        team_client(json(200, %{data: dkim_domain(nil), message: "Upgrade cancelled."}))
+
+      assert {:ok, %Types.DomainMutationResponse{data: %Types.DomainData{dkim_transition: nil}}} =
+               Lettermint.Domains.cancel_dkim_upgrade(client, "d 1")
+
+      grace = %{
+        type: "rotation",
+        state: "grace_period",
+        completes_after: "2026-11-30T09:00:00Z",
+        future: true
+      }
+
+      client = team_client(json(202, %{data: dkim_domain(grace), message: "Rotation started."}))
+
+      assert {:ok,
+              %Types.DomainMutationResponse{
+                data: %Types.DomainData{
+                  dkim_transition: %Types.DomainDkimTransition{
+                    type: "rotation",
+                    state: "grace_period",
+                    completes_after: "2026-11-30T09:00:00Z",
+                    extra: %{"future" => true}
+                  }
+                }
+              }} = Lettermint.Domains.rotate_dkim_key(client, "d 1")
+
+      client = team_client(json(200, %{id: "d", domain: "acme.com"}))
+
+      assert {:ok, %Types.DomainData{dkim_transition: :unset}} =
+               Lettermint.Domains.retrieve(client, "d")
+    end
+
+    test "each function validates the domain ID, needs the team token and rejects unknown options" do
+      for {function, _method, _path, label} <- dkim_calls() do
+        for id <- ["", ".", ".."] do
+          assert_raise Lettermint.ConfigError, ~r/#{label}: domainId/, fn ->
+            function.(team_client(), id, [])
+          end
+        end
+
+        assert_raise Lettermint.ConfigError, ~r/#{label} needs :team_token/, fn ->
+          function.(sending_client(), "d", [])
+        end
+
+        assert_raise Lettermint.ConfigError, ~r/#{label}: unknown option :idempotency_key/, fn ->
+          function.(team_client(), "d", idempotency_key: "k")
+        end
+      end
+
+      refute_received {:request, _}
+    end
+
+    test "a domain in the wrong state maps to a ValidationError" do
+      unavailable = %{
+        message: "The upgrade is not ready to activate.",
+        error: "DKIM_UPGRADE_NOT_READY"
+      }
+
+      assert {:error,
+              %Lettermint.ValidationError{
+                status: 422,
+                code: "DKIM_UPGRADE_NOT_READY",
+                message: "The upgrade is not ready to activate."
+              }} =
+               Lettermint.Domains.activate_dkim_upgrade(team_client(json(422, unavailable)), "d")
+
+      assert {:error, %Lettermint.NotFoundError{status: 404}} =
+               Lettermint.Domains.rotate_dkim_key(
+                 team_client(json(404, %{message: "Not found."})),
+                 "d"
+               )
+    end
+  end
+
   describe "team invites" do
     defp invite(overrides \\ %{}) do
       Map.merge(
