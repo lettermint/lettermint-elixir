@@ -104,4 +104,84 @@ defmodule Lettermint.Domains do
       options: options
     })
   end
+
+  @doc """
+  Starts the managed DKIM upgrade of a `legacy_txt` domain. `data.dns_records`
+  lists two new DKIM CNAME records with `verification_scope` `"migration"`;
+  add them to your DNS. The current DKIM TXT record keeps signing until the
+  upgrade completes. When `data.dkim_transition.state` is
+  `"ready_to_activate"`, call `activate_dkim_upgrade/3`.
+
+  Calling it again returns the upgrade that is in progress. For a domain that
+  already uses managed DKIM nothing changes. A domain that cannot be upgraded
+  returns a `Lettermint.ValidationError` (422).
+  """
+  @spec start_dkim_upgrade(Client.t(), String.t(), keyword()) ::
+          result(Types.DomainMutationResponse.t())
+  def start_dkim_upgrade(%Client{} = client, domain_id, options \\ []) do
+    Transport.call(client, "POST /domains/{domainId}/dkim/upgrade", %{
+      label: "domains.start_dkim_upgrade",
+      path: %{"domainId" => domain_id},
+      options: options
+    })
+  end
+
+  @doc """
+  Cancels the managed DKIM upgrade and removes its DKIM CNAME records. The
+  domain keeps its DKIM TXT record. Without an upgrade in progress nothing
+  changes, and a key rotation is never cancelled. After the grace period
+  started, the upgrade cannot be cancelled: the API returns a
+  `Lettermint.ValidationError` (422).
+  """
+  @spec cancel_dkim_upgrade(Client.t(), String.t(), keyword()) ::
+          result(Types.DomainMutationResponse.t())
+  def cancel_dkim_upgrade(%Client{} = client, domain_id, options \\ []) do
+    Transport.call(client, "DELETE /domains/{domainId}/dkim/upgrade", %{
+      label: "domains.cancel_dkim_upgrade",
+      path: %{"domainId" => domain_id},
+      options: options
+    })
+  end
+
+  @doc """
+  Activates the managed DKIM upgrade. Lettermint checks both DKIM CNAME
+  records again, then starts a grace period in which both keys are published.
+  The upgrade completes at `data.dkim_transition.completes_after`, and
+  `dkim_mode` then changes to `"managed_cname"`; after that you can remove the
+  old DKIM TXT record.
+
+  Calling it again during the grace period, or after the upgrade completed,
+  changes nothing. Without an upgrade, or before it is ready, the API returns
+  a `Lettermint.ValidationError` (422).
+  """
+  @spec activate_dkim_upgrade(Client.t(), String.t(), keyword()) ::
+          result(Types.DomainMutationResponse.t())
+  def activate_dkim_upgrade(%Client{} = client, domain_id, options \\ []) do
+    Transport.call(client, "POST /domains/{domainId}/dkim/upgrade/activate", %{
+      label: "domains.activate_dkim_upgrade",
+      path: %{"domainId" => domain_id},
+      options: options
+    })
+  end
+
+  @doc """
+  Starts a DKIM key rotation for a domain with managed DKIM. The DKIM CNAME
+  records stay the same, so no DNS change is needed. Lettermint publishes the
+  new key, then keeps both keys published during a grace period. Lettermint
+  also rotates keys on a schedule, so you only need this to replace a key
+  early.
+
+  Calling it again during a rotation returns the rotation that is in
+  progress. A domain that cannot be rotated returns a
+  `Lettermint.ValidationError` (422).
+  """
+  @spec rotate_dkim_key(Client.t(), String.t(), keyword()) ::
+          result(Types.DomainMutationResponse.t())
+  def rotate_dkim_key(%Client{} = client, domain_id, options \\ []) do
+    Transport.call(client, "POST /domains/{domainId}/dkim/rotate", %{
+      label: "domains.rotate_dkim_key",
+      path: %{"domainId" => domain_id},
+      options: options
+    })
+  end
 end

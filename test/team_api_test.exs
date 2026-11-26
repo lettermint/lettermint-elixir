@@ -32,6 +32,11 @@ defmodule Lettermint.TeamAPITest do
        &Domains.verify_dns_record(&1, "id1", "id2")},
       {"PUT /domains/{domainId}/projects",
        &Domains.update_projects(&1, "id1", %{project_ids: []})},
+      {"POST /domains/{domainId}/dkim/upgrade", &Domains.start_dkim_upgrade(&1, "id1")},
+      {"DELETE /domains/{domainId}/dkim/upgrade", &Domains.cancel_dkim_upgrade(&1, "id1")},
+      {"POST /domains/{domainId}/dkim/upgrade/activate",
+       &Domains.activate_dkim_upgrade(&1, "id1")},
+      {"POST /domains/{domainId}/dkim/rotate", &Domains.rotate_dkim_key(&1, "id1")},
       {"GET /messages", &Messages.list(&1)},
       {"GET /messages/{messageId}", &Messages.retrieve(&1, "id1")},
       {"GET /messages/{messageId}/events", &Messages.events(&1, "id1")},
@@ -121,12 +126,8 @@ defmodule Lettermint.TeamAPITest do
   end
 
   # Operations of the generated table that have no public function yet: they are
-  # added by the next PRs in this stack. Every other operation is checked strictly.
+  # added by the next PR in this stack. Every other operation is checked strictly.
   @pending [
-    "POST /domains/{domainId}/dkim/upgrade",
-    "DELETE /domains/{domainId}/dkim/upgrade",
-    "POST /domains/{domainId}/dkim/upgrade/activate",
-    "POST /domains/{domainId}/dkim/rotate",
     "GET /projects/{projectId}/tracking-domain",
     "PUT /projects/{projectId}/tracking-domain",
     "DELETE /projects/{projectId}/tracking-domain",

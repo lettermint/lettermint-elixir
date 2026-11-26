@@ -306,6 +306,15 @@ lettermint = Lettermint.new(team_token: System.fetch_env!("LETTERMINT_TEAM_TOKEN
 {:ok, domain} = Lettermint.Domains.create(lettermint, %{domain: "acme.com"})
 {:ok, _} = Lettermint.Domains.verify_dns_records(lettermint, domain.id)
 
+# Move a domain with a DKIM TXT record to managed DKIM. Add the new DKIM CNAME records to your
+# DNS, then activate once upgrade.data.dkim_transition.state is "ready_to_activate".
+{:ok, upgrade} = Lettermint.Domains.start_dkim_upgrade(lettermint, domain.id)
+upgrade.data.dns_records # the CNAME records have verification_scope "migration"
+{:ok, _} = Lettermint.Domains.activate_dkim_upgrade(lettermint, domain.id)
+
+# Replace a managed DKIM key early. No DNS change is needed.
+{:ok, _} = Lettermint.Domains.rotate_dkim_key(lettermint, domain.id)
+
 {:ok, project} = Lettermint.Projects.create(lettermint, %{name: "Production"})
 project.api_token # the new project's sending token, shown once
 
@@ -357,7 +366,7 @@ created.data.token
 
 | Module | Functions |
 | --- | --- |
-| `Lettermint.Domains` | `list`, `iterate`, `create`, `retrieve`, `delete`, `verify_dns_records`, `verify_dns_record`, `update_projects` |
+| `Lettermint.Domains` | `list`, `iterate`, `create`, `retrieve`, `delete`, `verify_dns_records`, `verify_dns_record`, `update_projects`, `start_dkim_upgrade`, `cancel_dkim_upgrade`, `activate_dkim_upgrade`, `rotate_dkim_key` |
 | `Lettermint.Messages` | `list`, `iterate`, `retrieve`, `events`, `iterate_events`, `source`, `html`, `text`, `reschedule`, `cancel`, `process`, `resend` |
 | `Lettermint.Projects` | `list`, `iterate`, `create`, `retrieve`, `update`, `delete`, `rotate_token` |
 | `Lettermint.Projects.ReportForwarding` | `retrieve`, `update`, `delete`, `verify`, `resend_code` |
