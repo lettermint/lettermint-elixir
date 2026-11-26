@@ -344,6 +344,10 @@ created.data.token
   Lettermint.Team.ApiTokens.create(lettermint, %{name: "Terraform", abilities: ["read:projects"]})
 
 created.data.token
+
+# Rename it or replace its abilities. It can only get abilities that this token has.
+{:ok, _} = Lettermint.Team.ApiTokens.update(lettermint, created.data.id, %{abilities: ["read:projects", "write:projects"]})
+
 {:ok, _} = Lettermint.Team.ApiTokens.delete(lettermint, created.data.id)
 
 # The members who can access a project, and removing a member from the team.
@@ -364,7 +368,7 @@ created.data.token
 | `Lettermint.Team` | `retrieve`, `update`, `usage`, `roles`, `retrieve_role`, `create_role`, `update_role`, `delete_role`, `duplicate_role` |
 | `Lettermint.Team.Members` | `list`, `iterate`, `retrieve`, `update_assignment`, `remove` |
 | `Lettermint.Team.Invites` | `list`, `iterate`, `retrieve`, `create`, `update`, `revoke` |
-| `Lettermint.Team.ApiTokens` | `list`, `iterate`, `create`, `delete` |
+| `Lettermint.Team.ApiTokens` | `list`, `iterate`, `create`, `update`, `delete` |
 | `Lettermint.Webhooks` | `list`, `iterate`, `create`, `retrieve`, `update`, `delete`, `test`, `regenerate_secret` |
 | `Lettermint.Webhooks.Deliveries` | `list(client, webhook_id)`, `iterate(client, webhook_id)`, `retrieve(client, webhook_id, delivery_id)`, `retry(client, webhook_id, delivery_id)` |
 | `Lettermint` | `ping`, `analytics`, `analytics_pages`, `blocked_file_types` |
