@@ -16,7 +16,8 @@ defmodule Lettermint do
       sending token (`x-lettermint-token`);
     * every other module uses the team token (`Authorization: Bearer`):
       `Lettermint.Domains`, `Lettermint.Messages`, `Lettermint.Projects`,
-      `Lettermint.Projects.ReportForwarding`, `Lettermint.Projects.ApiTokens`,
+      `Lettermint.Projects.ReportForwarding`,
+      `Lettermint.Projects.TrackingDomain`, `Lettermint.Projects.ApiTokens`,
       `Lettermint.Routes`, `Lettermint.Stats`, `Lettermint.Suppressions`,
       `Lettermint.Team`, `Lettermint.Team.Members`, `Lettermint.Team.Invites`,
       `Lettermint.Team.ApiTokens`, `Lettermint.Webhooks`,

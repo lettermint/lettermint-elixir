@@ -53,6 +53,7 @@ defmodule Lettermint.MixProject do
           Lettermint.Messages,
           Lettermint.Projects,
           Lettermint.Projects.ReportForwarding,
+          Lettermint.Projects.TrackingDomain,
           Lettermint.Projects.ApiTokens,
           Lettermint.Routes,
           Lettermint.Stats,

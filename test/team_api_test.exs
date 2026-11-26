@@ -64,6 +64,13 @@ defmodule Lettermint.TeamAPITest do
        &Projects.ReportForwarding.verify(&1, "id1", %{code: "1"})},
       {"POST /projects/{projectId}/report-forwarding/resend-code",
        &Projects.ReportForwarding.resend_code(&1, "id1")},
+      {"GET /projects/{projectId}/tracking-domain", &Projects.TrackingDomain.retrieve(&1, "id1")},
+      {"PUT /projects/{projectId}/tracking-domain",
+       &Projects.TrackingDomain.update(&1, "id1", %{domain: "track.acme.com"})},
+      {"DELETE /projects/{projectId}/tracking-domain",
+       &Projects.TrackingDomain.delete(&1, "id1")},
+      {"POST /projects/{projectId}/tracking-domain/verify",
+       &Projects.TrackingDomain.verify(&1, "id1")},
       {"GET /projects/{projectId}/api-tokens", &Projects.ApiTokens.list(&1, "id1")},
       {"POST /projects/{projectId}/api-tokens",
        &Projects.ApiTokens.create(&1, "id1", %{name: "T"})},
@@ -125,15 +132,6 @@ defmodule Lettermint.TeamAPITest do
     ]
   end
 
-  # Operations of the generated table that have no public function yet: they are
-  # added by the next PR in this stack. Every other operation is checked strictly.
-  @pending [
-    "GET /projects/{projectId}/tracking-domain",
-    "PUT /projects/{projectId}/tracking-domain",
-    "DELETE /projects/{projectId}/tracking-domain",
-    "POST /projects/{projectId}/tracking-domain/verify"
-  ]
-
   # The stream functions of every paginated operation.
   defp streams do
     [
@@ -158,6 +156,7 @@ defmodule Lettermint.TeamAPITest do
     cond do
       path =~ ~r{/(source|html|text)$} or path == "/v1/ping" -> raw(200, "pong")
       path =~ ~r{/report-forwarding$} and request.method == :delete -> raw(204, "")
+      path =~ ~r{/tracking-domain$} and request.method == :delete -> raw(204, "")
       path == "/v1/send/batch" -> json(202, [%{message_id: "m", status: "pending"}])
       true -> json(200, %{data: [], next_cursor: nil})
     end
@@ -173,8 +172,7 @@ defmodule Lettermint.TeamAPITest do
   end
 
   test "every operation in the generated table is reachable through a public function" do
-    assert Enum.sort(Enum.map(calls(), &elem(&1, 0)) ++ @pending) ==
-             Lettermint.Operations.keys()
+    assert Enum.sort(Enum.map(calls(), &elem(&1, 0))) == Lettermint.Operations.keys()
 
     for {key, call} <- calls() do
       operation = Lettermint.Operations.fetch!(key)

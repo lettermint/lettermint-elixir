@@ -324,6 +324,13 @@ project.api_token # the new project's sending token, shown once
 created.data.token
 {:ok, _} = Lettermint.Projects.ApiTokens.delete(lettermint, project.id, created.data.id)
 
+# A custom tracking domain for open and click tracking links. Add a CNAME record that points
+# to cname_target, then check it. A failed check returns a Lettermint.ValidationError whose
+# body holds the outcome.
+{:ok, tracking} = Lettermint.Projects.TrackingDomain.update(lettermint, project.id, %{domain: "track.acme.com"})
+tracking.data.cname_target
+{:ok, _} = Lettermint.Projects.TrackingDomain.verify(lettermint, project.id)
+
 {:ok, stats} = Lettermint.Stats.retrieve(lettermint, %{from: "2026-10-01", to: "2026-10-31"})
 {:ok, html} = Lettermint.Messages.html(lettermint, "message-id")
 
@@ -370,6 +377,7 @@ created.data.token
 | `Lettermint.Messages` | `list`, `iterate`, `retrieve`, `events`, `iterate_events`, `source`, `html`, `text`, `reschedule`, `cancel`, `process`, `resend` |
 | `Lettermint.Projects` | `list`, `iterate`, `create`, `retrieve`, `update`, `delete`, `rotate_token` |
 | `Lettermint.Projects.ReportForwarding` | `retrieve`, `update`, `delete`, `verify`, `resend_code` |
+| `Lettermint.Projects.TrackingDomain` | `retrieve`, `update`, `delete`, `verify` |
 | `Lettermint.Projects.ApiTokens` | `list(client, project_id)`, `iterate(client, project_id)`, `create(client, project_id, …)`, `delete(client, project_id, token_id)` |
 | `Lettermint.Routes` | `list(client, project_id)`, `iterate(client, project_id)`, `create(client, project_id, …)`, `retrieve`, `update`, `delete`, `verify_inbound_domain` |
 | `Lettermint.Stats` | `retrieve` |
