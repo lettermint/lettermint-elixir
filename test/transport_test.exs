@@ -1164,6 +1164,186 @@ defmodule Lettermint.TransportTest do
     end
   end
 
+  describe "project tracking domain" do
+    defp tracking_domain(overrides \\ %{}) do
+      Map.merge(
+        %{
+          domain: "track.acme.com",
+          verified: false,
+          active: false,
+          verified_at: nil,
+          last_verification_at: nil,
+          cname_target: "track.lettermint.co"
+        },
+        overrides
+      )
+    end
+
+    defp verification(overrides) do
+      Map.merge(
+        %{
+          domain: "track.acme.com",
+          verified: false,
+          verified_at: nil,
+          expected_cname: "track.lettermint.co",
+          found_cname: nil,
+          temporary_error: false
+        },
+        overrides
+      )
+    end
+
+    test "projects.tracking_domain.retrieve gets the domain" do
+      client = team_client(json(200, tracking_domain(%{domain: nil})))
+
+      assert {:ok,
+              %Types.ProjectTrackingDomain{
+                domain: nil,
+                verified: false,
+                active: false,
+                cname_target: "track.lettermint.co"
+              }} = Lettermint.Projects.TrackingDomain.retrieve(client, "p 1", timeout: 5_000)
+
+      assert_receive {:request, request}
+      assert request.method == :get
+      assert path(request) == "/v1/projects/p%201/tracking-domain"
+      assert header(request, "authorization") == "Bearer " <> team_token()
+      assert header(request, "x-lettermint-token") == nil
+      assert request.body == nil
+      assert request.timeout == 5_000
+    end
+
+    test "projects.tracking_domain.update puts the domain and decodes the mutation response" do
+      client =
+        team_client(json(200, %{data: tracking_domain(), message: "Tracking domain saved."}))
+
+      assert {:ok,
+              %Types.ProjectTrackingDomainMutationResponse{
+                message: "Tracking domain saved.",
+                data: %Types.ProjectTrackingDomain{
+                  domain: "track.acme.com",
+                  verified: false,
+                  cname_target: "track.lettermint.co"
+                }
+              }} =
+               Lettermint.Projects.TrackingDomain.update(
+                 client,
+                 "p 1",
+                 %Types.UpdateProjectTrackingDomainData{domain: "track.acme.com"},
+                 timeout: 5_000
+               )
+
+      assert_receive {:request, request}
+      assert request.method == :put
+      assert path(request) == "/v1/projects/p%201/tracking-domain"
+      assert header(request, "authorization") == "Bearer " <> team_token()
+      assert header(request, "idempotency-key") == nil
+      assert header(request, "content-type") == "application/json"
+      assert request.timeout == 5_000
+      assert Jason.decode!(request.body) == %{"domain" => "track.acme.com"}
+
+      assert {:ok, _} =
+               Lettermint.Projects.TrackingDomain.update(client, "p 1", %{domain: "t.acme.com"})
+
+      assert_receive {:request, request}
+      assert Jason.decode!(request.body) == %{"domain" => "t.acme.com"}
+    end
+
+    test "projects.tracking_domain.delete returns :ok for 204" do
+      client = team_client(raw(204, ""))
+      assert :ok = Lettermint.Projects.TrackingDomain.delete(client, "p 1")
+      assert_receive {:request, request}
+      assert request.method == :delete
+      assert path(request) == "/v1/projects/p%201/tracking-domain"
+      assert header(request, "authorization") == "Bearer " <> team_token()
+      assert request.body == nil
+    end
+
+    test "projects.tracking_domain.verify posts no body and decodes the outcome" do
+      verified =
+        verification(%{
+          verified: true,
+          verified_at: "2026-11-26T09:00:00Z",
+          found_cname: "track.lettermint.co"
+        })
+
+      client = team_client(json(200, %{data: verified, message: "Domain verified."}))
+
+      assert {:ok,
+              %Types.ProjectTrackingDomainVerificationResponse{
+                message: "Domain verified.",
+                data: %Types.ProjectTrackingDomainVerification{
+                  domain: "track.acme.com",
+                  verified: true,
+                  verified_at: "2026-11-26T09:00:00Z",
+                  expected_cname: "track.lettermint.co",
+                  found_cname: "track.lettermint.co",
+                  temporary_error: false
+                }
+              }} = Lettermint.Projects.TrackingDomain.verify(client, "p 1")
+
+      assert_receive {:request, request}
+      assert request.method == :post
+      assert path(request) == "/v1/projects/p%201/tracking-domain/verify"
+      assert header(request, "authorization") == "Bearer " <> team_token()
+      assert header(request, "idempotency-key") == nil
+      assert header(request, "content-type") == nil
+      assert request.body == nil
+    end
+
+    test "a failed CNAME check is a ValidationError whose body holds the outcome" do
+      failed = %{
+        data: verification(%{found_cname: "other.example.net"}),
+        message: "The CNAME record points to other.example.net."
+      }
+
+      assert {:error,
+              %Lettermint.ValidationError{
+                status: 422,
+                message: "The CNAME record points to other.example.net.",
+                errors: nil,
+                body: %{
+                  "data" => %{
+                    "verified" => false,
+                    "expected_cname" => "track.lettermint.co",
+                    "found_cname" => "other.example.net",
+                    "temporary_error" => false
+                  }
+                }
+              }} =
+               Lettermint.Projects.TrackingDomain.verify(team_client(json(422, failed)), "p")
+
+      assert {:error, %Lettermint.NotFoundError{status: 404}} =
+               Lettermint.Projects.TrackingDomain.retrieve(
+                 team_client(json(404, %{message: "Not found."})),
+                 "p"
+               )
+    end
+
+    test "projects.tracking_domain validates the project ID and needs the team token" do
+      calls = [
+        {"retrieve", &Lettermint.Projects.TrackingDomain.retrieve(&1, &2)},
+        {"update", &Lettermint.Projects.TrackingDomain.update(&1, &2, %{domain: "t.acme.com"})},
+        {"delete", &Lettermint.Projects.TrackingDomain.delete(&1, &2)},
+        {"verify", &Lettermint.Projects.TrackingDomain.verify(&1, &2)}
+      ]
+
+      for {name, call} <- calls do
+        for id <- ["", ".", ".."] do
+          assert_raise Lettermint.ConfigError,
+                       ~r/projects.tracking_domain.#{name}: projectId/,
+                       fn -> call.(team_client(), id) end
+        end
+
+        assert_raise Lettermint.ConfigError,
+                     ~r/projects.tracking_domain.#{name} needs :team_token/,
+                     fn -> call.(sending_client(), "p") end
+      end
+
+      refute_received {:request, _}
+    end
+  end
+
   describe "team invites" do
     defp invite(overrides \\ %{}) do
       Map.merge(
