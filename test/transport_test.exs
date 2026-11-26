@@ -867,11 +867,108 @@ defmodule Lettermint.TransportTest do
       assert request.body == nil
     end
 
+    test "team.api_tokens.update puts the changed fields and decodes the token" do
+      updated = team_api_token(%{name: "Deploys", abilities: ["read:projects"]})
+      client = team_client(json(200, updated))
+
+      assert {:ok,
+              %Types.TeamApiToken{
+                id: "t 1",
+                name: "Deploys",
+                abilities: ["read:projects"],
+                allowed_ips: ["203.0.113.0/24"],
+                expires_at: "2027-01-01T00:00:00Z",
+                last_used_at: nil
+              } = token} =
+               Lettermint.Team.ApiTokens.update(
+                 client,
+                 "t 1",
+                 %Types.UpdateTeamApiTokenData{name: "Deploys", abilities: ["read:projects"]},
+                 timeout: 5_000
+               )
+
+      refute Map.has_key?(token, :token)
+      assert_receive {:request, request}
+      assert request.method == :put
+      assert path(request) == "/v1/team/api-tokens/t%201"
+      assert header(request, "authorization") == "Bearer " <> team_token()
+      assert header(request, "x-lettermint-token") == nil
+      assert header(request, "idempotency-key") == nil
+      assert header(request, "content-type") == "application/json"
+      assert request.timeout == 5_000
+
+      assert Jason.decode!(request.body) == %{
+               "name" => "Deploys",
+               "abilities" => ["read:projects"]
+             }
+
+      # Fields left out of the struct are not sent, so they keep their value.
+      assert {:ok, %Types.TeamApiToken{}} =
+               Lettermint.Team.ApiTokens.update(client, "t 1", %Types.UpdateTeamApiTokenData{
+                 name: "Deploys"
+               })
+
+      assert_receive {:request, request}
+      assert Jason.decode!(request.body) == %{"name" => "Deploys"}
+
+      assert {:ok, _} = Lettermint.Team.ApiTokens.update(client, "t 1", %{abilities: []})
+      assert_receive {:request, request}
+      assert Jason.decode!(request.body) == %{"abilities" => []}
+
+      assert {:ok, _} = Lettermint.Team.ApiTokens.update(client, "t 1", %{})
+      assert_receive {:request, request}
+      assert request.body == "{}"
+    end
+
+    test "team.api_tokens.update maps 403 to a PermissionError and 422 to a ValidationError" do
+      denied = %{
+        message: "The token exceeds the requesting token.",
+        error: "TOKEN_EXCEEDS_REQUESTER"
+      }
+
+      assert {:error,
+              %Lettermint.PermissionError{
+                status: 403,
+                code: "TOKEN_EXCEEDS_REQUESTER",
+                message: "The token exceeds the requesting token."
+              }} =
+               Lettermint.Team.ApiTokens.update(team_client(json(403, denied)), "t", %{
+                 abilities: ["*"]
+               })
+
+      invalid = %{
+        message: "The name field must be a string.",
+        errors: %{name: ["The name field must be a string."]}
+      }
+
+      assert {:error,
+              %Lettermint.ValidationError{
+                status: 422,
+                errors: %{"name" => ["The name field must be a string."]}
+              }} =
+               Lettermint.Team.ApiTokens.update(team_client(json(422, invalid)), "t", %{name: 1})
+
+      assert {:error, %Lettermint.NotFoundError{status: 404}} =
+               Lettermint.Team.ApiTokens.update(
+                 team_client(json(404, %{message: "Not found."})),
+                 "t",
+                 %{name: "T"}
+               )
+    end
+
     test "team.api_tokens validates its path parameter and needs the team token" do
       for id <- ["", ".", ".."] do
         assert_raise Lettermint.ConfigError, ~r/team.api_tokens.delete: tokenId/, fn ->
           Lettermint.Team.ApiTokens.delete(team_client(), id)
         end
+
+        assert_raise Lettermint.ConfigError, ~r/team.api_tokens.update: tokenId/, fn ->
+          Lettermint.Team.ApiTokens.update(team_client(), id, %{name: "T"})
+        end
+      end
+
+      assert_raise Lettermint.ConfigError, ~r/team.api_tokens.update needs :team_token/, fn ->
+        Lettermint.Team.ApiTokens.update(sending_client(), "t", %{name: "T"})
       end
 
       assert_raise Lettermint.ConfigError, ~r/team.api_tokens.create needs :team_token/, fn ->

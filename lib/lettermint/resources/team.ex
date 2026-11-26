@@ -397,6 +397,24 @@ defmodule Lettermint.Team.ApiTokens do
   end
 
   @doc """
+  Changes a team API token's `name`, or replaces its `abilities` with the
+  given list; leave a field out to keep it. A token can only change tokens
+  whose abilities it also has, and only to abilities it has. To add abilities,
+  the changed token must be limited to the requesting token's IP allowlist and
+  must not expire after it. Returns the token without its value.
+  """
+  @spec update(Client.t(), String.t(), Types.UpdateTeamApiTokenData.t() | map(), keyword()) ::
+          result(Types.TeamApiToken.t())
+  def update(%Client{} = client, token_id, body, options \\ []) do
+    Transport.call(client, "PUT /team/api-tokens/{tokenId}", %{
+      label: "team.api_tokens.update",
+      path: %{"tokenId" => token_id},
+      body: body,
+      options: options
+    })
+  end
+
+  @doc """
   Deletes a team API token. The token stops working immediately. A token can
   only delete tokens whose abilities it also has.
   """
